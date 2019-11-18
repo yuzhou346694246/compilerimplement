@@ -1,41 +1,37 @@
-## LR(1) 存在的优点
-## 功能非常强大，只要不是二义性语法都是识别
-## 但是缺点也是非常明显
-## 就拿例子中的语法，使用slr只有11个状态
-## 使用lr有22个状态，显然这个状态有点多，这还只是只有几个语法的情况下
-## 所以这里提出LALR的改进型方法
-# 16
-# F->( E ) . $
-# ---------------------------------
-# 21
-# F->( E ) . )
-# ---------------------------------
-## 我们观察lr中的状态，有些状态是可以合并的，比如16和21
-## 这两个状态都只有一个项，同样也是reduce操作，完全可以合并在一起
-## 同样20和14也是这种情况，也可以合并在一起
-# (1) E -> E + T 
-# (2) E -> T 
-# (3) T -> T * F  
-# (4) T -> F
-# (5) F -> (E)
-# (6) F -> id
+## 让LALR支持带二义性的语法
+## E->E+E|E*E|(E)|id
+## 这种语法就是带二义性的，可以将其改写为非二义性的语法
+## 但是这种改写方法会增加编写语法的复杂性
+## stmt-> if expr then stmt | if expr the stmt else stmt
+## 同样这个语法也是二义性的
+
+# 基于优先级和结合律的方法
+# 对于 E->E+E. +  E->E.+E + 这种情况 此处要考虑结合律
+# 对于 E->E+E. *  E->E.*E 此处要考虑优先级的问题
+# 方法如下，如果发生冲突，reduce产生式最近的一个终结符（第一个例子是+）
+# 与我们要reduce的终结符进行匹配，如果优先级相同，按照结合律进行
+# 如果优先级不同，优先级高的执行
+# 但是这里有个问题，有些终结符有多种含义，那其优先级就不确定（两种优先级）
+# -1+1 那么第一个负号优先级肯定高于第二个+号
+# 解决reduce/shift冲突的原则
+# (1) 
+
 # productions = {
 #     'E':[['E','+','T'],['T'],
 #     'T':[['T','*','F'],['F']],
 #     'F':[['(','E',')'],['id']]
 # }
-# 每个可以合并的LR(1)，其SLR集是一样的
-# 那么我们就可以通过LR(1)集合的SLR，来判断两个LR(1)状态是否能合并
-productions = [
-    ['E','E','+','T'],
-    ['E','T'],
-    ['T','T','*','F'],
-    ['T','F'],
-    ['F','(','E',')'],
-    ['F','id']
-]
-terminal = ['+','*','(',')','id']
-nonterminal = ['E','T','F']
+
+# productions = [
+#     ['E','E','+','T'],
+#     ['E','T'],
+#     ['T','T','*','F'],
+#     ['T','F'],
+#     ['F','(','E',')'],
+#     ['F','id']
+# ]
+# terminal = ['+','*','(',')','id']
+# nonterminal = ['E','T','F']
 # productions = [
 #     ['S','C','C'],
 #     ['C','c','C'],
@@ -43,6 +39,123 @@ nonterminal = ['E','T','F']
 # ]
 # terminal = ['c','d']
 # nonterminal = ['S','C']
+
+productions = [
+    ['Program','Block'],
+    ['Block','{','Decls','Stmts','}'],
+    ['Decls','Decls','Decl'],
+    ['Decls'],
+    ['Decl','Type','id'],
+    ['Type','Type','[','num',']'],
+    ['Type','int'],
+    ['Type','string'],
+    ['Type','float'],
+    ['Stmts','Stmts','Stmt'],
+    ['Stmts'],
+    ['Stmt','Loc','=','Exp'],
+    ['Stmt','if','(','Exp',')','Stmt'],
+    ['Stmt','if','(','Exp',')','Stmt','else','Stmt'],
+    ['Stmt','while','(','Exp',')','Stmt'],
+    ['Stmt','do','Stmt','while','(','Exp',')'],
+    ['Stmt','break'],
+    ['Stmt','Block'],
+    ['Loc','Loc','[','Exp',']'],
+    ['Loc','id'],
+    ['Exp','Exp','||','Exp'],
+    ['Exp','Exp','&&','Exp'],
+    ['Exp','Exp','==','Exp'],
+    ['Exp','Exp','!=','Exp'],
+    ['Exp','Exp','>=','Exp'],
+    ['Exp','Exp','<=','Exp'],
+    ['Exp','Exp','>','Exp'],
+    ['Exp','Exp','<','Exp'],
+    ['Exp','Exp','+','Exp'],
+    ['Exp','Exp','-','Exp'],
+    ['Exp','Exp','*','Exp'],
+    ['Exp','Exp','/','Exp'],
+    ['Exp','-','Exp'],
+    ['Exp','!','Exp'],
+    ['Exp','Loc'],
+    ['Exp','num'],
+    ['Exp','true'],
+    ['Exp','false'],
+    ['Exp','real']
+]
+
+terminal = [
+    '{','}','[',']','id','int','string','float','num','=',
+    '||','&&','==','!=','>=','<=','>','<','+','-','*','/',
+    '!','true','false','real','do','else','while','break',
+    'if','(',')'
+]
+
+nonterminal =[
+    'Program','Block','Decls','Stmts','Stmt','Decl','Type',
+    'Loc','Exp'
+]
+
+precs = {
+    'UMINUS':['Exp','-','Exp'],
+}
+precedence = {# 优先级
+    '!':7,
+    '||':8,
+    '&&':8,
+    '>':9,
+    '>=':9,
+    '<':9,
+    '<=':9,
+    '==':9,
+    '!=':9,
+    '+':10,
+    '-':10,
+    '*':11,
+    '/':11,
+    'UMINUS':15
+}
+
+assosiation = {# 结合律
+    '+':'L',
+    '-':'L',
+    '*':'L',
+    '/':'L',
+    'UMINUS':'R',
+    '!':'R'
+}
+
+
+# productions = [
+#     ['E','E','+','E'],
+#     ['E','E','*','E'],
+#     ['E','E','/','E'],
+#     ['E','(','E',')'],
+#     ['E','E','-','E'],
+#     ['E','-','E'],
+#     ['E','id'],
+# ]
+
+# precs = {
+#     'UMINUS':['E','-','E']
+# }
+
+# terminal = ['(','id','+','*',')','-','/']
+# nonterminal = ['E']
+# precedence = {# 优先级 
+#     '+':10,
+#     '-':10,
+#     '*':11,
+#     '/':11,
+#     'UMINUS':15
+# }
+
+# assosiation = {# 结合律
+#     '+':'L',
+#     '-':'L',
+#     '*':'L',
+#     '/':'L',
+#     'UMINUS':'R'
+# }
+
 ## I0 = ['START','.','E',$]
 ## CLOUSE
 ## ['E','.','E','+','T']
@@ -444,7 +557,32 @@ def lalrgen(C):
                 r = ''
                 if len(indexs) > 0:# 发生了reduce/shift conflict
                     r = '||r'+'|'.join(indexs)
-                action[a] = 's'+str(i)+r
+                    # 针对 else 这种情况，那么要reduce的产生式，就是shift产生式的开头一部分
+                    # 这里假设ps只有一个元素
+                    lps = [p for p in productions if len(p) > len(ps[0])]
+                    test = [ps[0] == p[:len(ps[0])] for p in lps]
+                    if True in test:
+                        action[a] = 'r'+indexs[0]
+                        continue
+                    p = ps[0]
+                    p = p[::-1]
+                    prec = 0
+                    for t in p:
+                        if t in terminal:
+                            for k,v in precs.items():# 如果语法中，对于某条语法定义了一个优先级，那么要先提取这个优先级
+                                if v == p:
+                                    t = k
+                            prec = precedence.get(t,0)
+                    cprec = precedence.get(a,0)
+                    if prec > cprec:
+                        action[a] = 'r'+indexs[0]
+                        continue
+                    if prec == cprec:
+                        asso = assosiation.get(prec,'L')
+                        if asso == 'L':
+                            action[a] = 'r'+indexs[0]
+                            continue
+                action[a] = 's'+str(i)
         actions[state] = action
         ## 非终结符的情况
         trans = {}
@@ -596,3 +734,6 @@ for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
     sp = ''.join(['-' for i in range(len(p))])
     print(sp)
     print(p)
+
+tokens = ['id','+','id','+','-','id']
+slrparse(actions, gotos, tokens)

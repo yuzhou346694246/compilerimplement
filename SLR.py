@@ -271,24 +271,3 @@ for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
 print('---------------------parse---------------------------')
 slrparse(actions, gotos, ['id','+','id'])
 
-## SLR存在的问题
-## S-> L=R
-## S-> R
-## L-> *R
-## L-> id
-## R-> L
-
-## 项目集
-## R-> L.
-## S-> L.=R
-## 显然这里就存在问题，到底是shift，还是reduce
-## 这个问题怎么解决，使用最长序列进行匹配（初步想法）
-## 这里还有个reduce reduce冲突
-## S-> aCe | aDb
-## C-> c
-## D-> c
-## 这个文法其实是没有二义性的
-## 当出现项目集
-## C-> c.
-## D-> c.
-## SLR无法确定应该用哪个产生式进行归约

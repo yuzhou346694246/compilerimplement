@@ -13,29 +13,9 @@
 # 如果优先级不同，优先级高的执行
 # 但是这里有个问题，有些终结符有多种含义，那其优先级就不确定（两种优先级）
 # -1+1 那么第一个负号优先级肯定高于第二个+号
+# 解决reduce/shift冲突的原则
+# (1) 
 
-
-## LR(1) 存在的优点
-## 功能非常强大，只要不是二义性语法都是识别
-## 但是缺点也是非常明显
-## 就拿例子中的语法，使用slr只有11个状态
-## 使用lr有22个状态，显然这个状态有点多，这还只是只有几个语法的情况下
-## 所以这里提出LALR的改进型方法
-# 16
-# F->( E ) . $
-# ---------------------------------
-# 21
-# F->( E ) . )
-# ---------------------------------
-## 我们观察lr中的状态，有些状态是可以合并的，比如16和21
-## 这两个状态都只有一个项，同样也是reduce操作，完全可以合并在一起
-## 同样20和14也是这种情况，也可以合并在一起
-# (1) E -> E + T 
-# (2) E -> T 
-# (3) T -> T * F  
-# (4) T -> F
-# (5) F -> (E)
-# (6) F -> id
 # productions = {
 #     'E':[['E','+','T'],['T'],
 #     'T':[['T','*','F'],['F']],
@@ -63,11 +43,34 @@
 productions = [
     ['E','E','+','E'],
     ['E','E','*','E'],
+    ['E','E','/','E'],
     ['E','(','E',')'],
-    ['E','id']
+    ['E','E','-','E'],
+    ['E','-','E'],
+    ['E','id'],
 ]
-terminal = ['(','id','+','*',')']
+
+precs = {
+    'UMINUS':['E','-','E']
+}
+
+terminal = ['(','id','+','*',')','-','/']
 nonterminal = ['E']
+precedence = {# 优先级 
+    '+':10,
+    '-':10,
+    '*':11,
+    '/':11,
+    'UMINUS':15
+}
+
+assosiation = {# 结合律
+    '+':'L',
+    '-':'L',
+    '*':'L',
+    '/':'L',
+    'UMINUS':'R'
+}
 
 ## I0 = ['START','.','E',$]
 ## CLOUSE
@@ -470,7 +473,32 @@ def lalrgen(C):
                 r = ''
                 if len(indexs) > 0:# 发生了reduce/shift conflict
                     r = '||r'+'|'.join(indexs)
-                action[a] = 's'+str(i)+r
+                    # 针对 else 这种情况，那么要reduce的产生式，就是shift产生式的开头一部分
+                    # 这里假设ps只有一个元素
+                    lps = [p for p in productions if len(p) > len(ps[0])]
+                    test = [ps[0] == p[:len(ps[0])] for p in lps]
+                    if True in test:
+                        action[a] = 'r'+indexs[0]
+                        continue
+                    p = ps[0]
+                    p = p[::-1]
+                    prec = 0
+                    for t in p:
+                        if t in terminal:
+                            for k,v in precs.items():# 如果语法中，对于某条语法定义了一个优先级，那么要先提取这个优先级
+                                if v == p:
+                                    t = k
+                            prec = precedence.get(t,0)
+                    cprec = precedence.get(a,0)
+                    if prec > cprec:
+                        action[a] = 'r'+indexs[0]
+                        continue
+                    if prec == cprec:
+                        asso = assosiation.get(prec,'L')
+                        if asso == 'L':
+                            action[a] = 'r'+indexs[0]
+                            continue
+                action[a] = 's'+str(i)
         actions[state] = action
         ## 非终结符的情况
         trans = {}
@@ -622,3 +650,6 @@ for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
     sp = ''.join(['-' for i in range(len(p))])
     print(sp)
     print(p)
+
+tokens = ['id','+','id','+','-','id']
+slrparse(actions, gotos, tokens)

@@ -27,4 +27,4 @@ def lex(line):
             pos=pos+1
             yield '/'
 
-print(list(lex('1+1')))
+print(list(lex('1+1+1')))
