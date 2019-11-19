@@ -41,6 +41,9 @@
 # nonterminal = ['S','C']
 
 productions = [
+    ['Stmts','Stmts','Stmt'],
+    ['Stmts'],
+    ['Stmt','id','=','E',';']
     ['E','E','+','E'],
     ['E','E','*','E'],
     ['E','E','/','E'],

@@ -1,46 +1,5 @@
-# 提取非终结符和终结符
+from lalrparse import Parser
 
-# productions = [
-#     ['Program','Block'],
-#     ['Block','{','Decls','Stmts','}'],
-#     ['Decls','Decls','Decl'],
-#     ['Decls'],
-#     ['Decl','Type','id'],
-#     ['Type','Type','[','num',']'],
-#     ['Type','int'],
-#     ['Type','string'],
-#     ['Type','float'],
-#     ['Stmts','Stmts','Stmt'],
-#     ['Stmts'],
-#     ['Stmt','Loc','=','Exp'],
-#     ['Stmt','if','(','Exp',')','Stmt'],
-#     ['Stmt','if','(','Exp',')','Stmt','else','Stmt'],
-#     ['Stmt','while','(','Exp',')','Stmt'],
-#     ['Stmt','do','Stmt','while','(','Exp',')'],
-#     ['Stmt','break'],
-#     ['Stmt','Block'],
-#     ['Loc','Loc','[','Exp',']'],
-#     ['Loc','id'],
-#     ['Exp','Exp','||','Exp'],
-#     ['Exp','Exp','&&','Exp'],
-#     ['Exp','Exp','==','Exp'],
-#     ['Exp','Exp','!=','Exp'],
-#     ['Exp','Exp','>=','Exp'],
-#     ['Exp','Exp','<=','Exp'],
-#     ['Exp','Exp','>','Exp'],
-#     ['Exp','Exp','<','Exp'],
-#     ['Exp','Exp','+','Exp'],
-#     ['Exp','Exp','-','Exp'],
-#     ['Exp','Exp','*','Exp'],
-#     ['Exp','Exp','/','Exp'],
-#     ['Exp','-','Exp'],
-#     ['Exp','!','Exp'],
-#     ['Exp','Loc'],
-#     ['Exp','num'],
-#     ['Exp','true'],
-#     ['Exp','false'],
-#     ['Exp','real']
-# ]
 productions = [
     ['Program','program','id',';','Block'],
     ['Block','VarDeclPart','ProcDeclPart','StatPart'],
@@ -115,43 +74,46 @@ productions = [
     ['ConstId','id']
 ]
 
-terminal = [
-    '{','}','[',']','id','int','string','float','num','=',
-    '||','&&','==','!=','>=','<=','>','<','+','-','*','/',
-    '!','true','false','real','do','else','while','break',
-    'if','(',')'
-]
+precs = {
+    # 'UMINUS':['E','-','E']
+}
 
-nonterminal =[
-    'Program','Block','Decls','Stmts','Stmt','Decl','Type',
-    'Loc','Exp'
-]
+terminal = ['program', 'id', ';', 'var', ':', ',', 'int', 'array', '[', ']', 'num', 
+    '..', 'procedure', 'begin', 'end', ':=', 'read', '(', ')', 'write', 'if', 'then', 
+    'else', 'while', 'do', 'not', '=', '<>', '>', '>=', '<', '<=', '+', '-', 'or', '*', 
+    '/', 'and', 'intconst', 'charconst']
 
-def p2TAndN():
-    nont = []
-    tt = []
-    for p in productions:
-        if p[0][0].isupper() :
-            if p[0] not in nont:
-                nont.append(p[0])
-        
-        for t in p[1:]:
-            if t.islower():
-                if t not in tt:
-                    tt.append(t)
+nonterminal = ['Program', 'Block', 'VarDeclPart', 'VarDecl', 'Decl', 'Ids', 'Type', 
+    'SimpleType', 'ArrayType', 'IndexRange', 'ProcDeclPart', 'ProcDecl', 'StatPart', 
+    'CompState', 'Stats', 'Stat', 'SimpleStat', 'AssignStat', 'ProcStat', 'ProcId', 
+    'ReadStat', 'WriteStat', 'OutputValues', 'StructStat', 'IfStat', 'WhileStat', 
+    'Exp', 'SimpleExp', 'Term', 'Factor', 'ReOp', 'Sign', 'AddOp', 'MulOp', 'Variable', 
+    'IndexVar', 'Const', 'ConstId']
+precedence = {# 优先级 
+    # '||':7,
+    # '&&':7,
+    # '!':8,
+    # '>=':9,
+    # '>':9,
+    # '<':9,
+    # '<=':9,
+    # '==':9,
+    # '!=':9,
+    # '+':10,
+    # '-':10,
+    # '*':11,
+    # '/':11,
+    # 'UMINUS':15
+}
 
-            if not t.isalnum():
-                if t not in tt:
-                    tt.append(t)
-    return nont,tt
+assosiation = {# 结合律
+    # '+':'L',
+    # '-':'L',
+    # '*':'L',
+    # '/':'L',
+    # 'UMINUS':'R'
+}
 
-nn,tt = p2TAndN()
-print(nn)
-print(tt)
-# for n in nn:
-#     if n not in nonterminal:
-#         print(n)
-# for t in tt:
-#     if t not in terminal:
-#         print(t)
 
+parser = Parser(productions, precs, terminal, nonterminal, precedence, assosiation)
+parser.generate(printInfo=True)
