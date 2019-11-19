@@ -74,9 +74,7 @@ productions = [
     ['ConstId','id']
 ]
 
-precs = {
-    # 'UMINUS':['E','-','E']
-}
+
 
 terminal = ['program', 'id', ';', 'var', ':', ',', 'int', 'array', '[', ']', 'num', 
     '..', 'procedure', 'begin', 'end', ':=', 'read', '(', ')', 'write', 'if', 'then', 
@@ -113,7 +111,9 @@ assosiation = {# 结合律
     # '/':'L',
     # 'UMINUS':'R'
 }
-
+precs = {
+    # 'UMINUS':['E','-','E']
+}
 
 parser = Parser(productions, precs, terminal, nonterminal, precedence, assosiation)
 parser.generate(printInfo=True)

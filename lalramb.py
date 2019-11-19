@@ -40,41 +40,65 @@
 # terminal = ['c','d']
 # nonterminal = ['S','C']
 
+# productions = [
+#     ['E','E','+','E'],
+#     ['E','E','*','E'],
+#     ['E','E','/','E'],
+#     ['E','(','E',')'],
+#     ['E','E','-','E'],
+#     ['E','-','E'],
+#     ['E','id'],
+# ]
+
+# precs = {
+#     'UMINUS':['E','-','E']
+# }
+
+# terminal = ['(','id','+','*',')','-','/']
+# nonterminal = ['E']
+# precedence = {# 优先级 
+#     '+':10,
+#     '-':10,
+#     '*':11,
+#     '/':11,
+#     'UMINUS':15
+# }
+
+# assosiation = {# 结合律
+#     '+':'L',
+#     '-':'L',
+#     '*':'L',
+#     '/':'L',
+#     'UMINUS':'R'
+# }
+
 productions = [
-    ['Stmts','Stmts','Stmt'],
-    ['Stmts'],
-    ['Stmt','id','=','E',';']
-    ['E','E','+','E'],
-    ['E','E','*','E'],
-    ['E','E','/','E'],
-    ['E','(','E',')'],
-    ['E','E','-','E'],
-    ['E','-','E'],
-    ['E','id'],
+    ['S','i','S','e','S'],
+    ['S','i','S'],
+    ['S','1']
 ]
 
 precs = {
-    'UMINUS':['E','-','E']
+    # 'UMINUS':['E','-','E']
 }
 
-terminal = ['(','id','+','*',')','-','/']
-nonterminal = ['E']
+terminal = ['i','1','e']
+nonterminal = ['S']
 precedence = {# 优先级 
-    '+':10,
-    '-':10,
-    '*':11,
-    '/':11,
-    'UMINUS':15
+    # '+':10,
+    # '-':10,
+    # '*':11,
+    # '/':11,
+    # 'UMINUS':15
 }
 
 assosiation = {# 结合律
-    '+':'L',
-    '-':'L',
-    '*':'L',
-    '/':'L',
-    'UMINUS':'R'
+    # '+':'L',
+    # '-':'L',
+    # '*':'L',
+    # '/':'L',
+    # 'UMINUS':'R'
 }
-
 ## I0 = ['START','.','E',$]
 ## CLOUSE
 ## ['E','.','E','+','T']
@@ -134,7 +158,7 @@ def first(A):
     if A in FIRST:
         return FIRST[A]
     if A in terminal:
-        FIRST[A] = set([A])
+        FIRST[A] = [A]
         return [A]
     if A in nonterminal:
         ps = [p for p in productions if p[0] == A]
@@ -176,7 +200,7 @@ def first(A):
             #     i = i+1
             # if i == len(p[1:]):
             #     ret.add('')
-        FIRST[A] = ret
+        FIRST[A] = list(ret)
         return ret
     return []
 
@@ -194,7 +218,7 @@ def firsts(AS):
         if '' in ret:
             ret.remove('')
     # 这里没有添加空，是因为我们采用update方法并且没有删除前面集合的空
-    return ret
+    return list(ret)
 def follow(A):
     if A in FOLLOW:
         return FOLLOW[A]
@@ -481,7 +505,7 @@ def lalrgen(C):
                     lps = [p for p in productions if len(p) > len(ps[0])]
                     test = [ps[0] == p[:len(ps[0])] for p in lps]
                     if True in test:
-                        action[a] = 'r'+indexs[0]
+                        action[a] = 's'+str(i)
                         continue
                     p = ps[0]
                     p = p[::-1]
@@ -595,8 +619,11 @@ def slrparse(actions,gotos,tokens):
     symbol = []
     tokens.append('$')
     while True:
+        print(states)
+        print(symbol)
         if pos == len(tokens):
             break
+        print(tokens[pos])
         current = states[-1]
         t = tokens[pos]
         if t in actions[current]:
@@ -626,6 +653,7 @@ def slrparse(actions,gotos,tokens):
                 break
         else:
             print('ERROR')
+            break
 lrC = listItems()
 lalrC = lr2lalr(lrC)
 # for i,c in enumerate(lalrC):
@@ -654,5 +682,6 @@ for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
     print(sp)
     print(p)
 
-tokens = ['id','+','id','+','-','id']
+# tokens = ['id','+','id','+','-','id']
+tokens = ['i','1','e','1']
 slrparse(actions, gotos, tokens)

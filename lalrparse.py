@@ -32,7 +32,7 @@ class Parser:
         if A in self.FIRST:
             return self.FIRST[A]
         if A in self.terminal:
-            self.FIRST[A] = set([A])
+            self.FIRST[A] = [A]
             return [A]
         if A in self.nonterminal:
             ps = [p for p in self.productions if p[0] == A]
@@ -72,7 +72,7 @@ class Parser:
                 #     i = i+1
                 # if i == len(p[1:]):
                 #     ret.add('')
-            self.FIRST[A] = ret
+            self.FIRST[A] = list(ret)
             return ret
         return []
 
@@ -90,7 +90,7 @@ class Parser:
             if '' in ret:
                 ret.remove('')
         # 这里没有添加空，是因为我们采用update方法并且没有删除前面集合的空
-        return ret
+        return list(ret)
 
     def closure(self, I):
         ret = []
@@ -277,7 +277,7 @@ class Parser:
                         lps = [p for p in self.productions if len(p) > len(ps[0])]
                         test = [ps[0] == p[:len(ps[0])] for p in lps]
                         if True in test:
-                            action[a] = 'r'+indexs[0]
+                            action[a] = 's'+str(i)
                             continue
                         p = ps[0]
                         p = p[::-1]
@@ -338,8 +338,12 @@ class Parser:
         symbol = []
         tokens.append('$')
         while True:
+            print(states)
+            print(symbol)
             if pos == len(tokens):
                 break
+            print(tokens[pos])
+            print('******************')
             current = states[-1]
             t = tokens[pos]
             if t in actions[current]:
@@ -369,6 +373,7 @@ class Parser:
                     break
             else:
                 print('ERROR')
+                break
     
     def generate(self,printInfo=False):
         self.addstart()#这里是LR扩展文法
@@ -389,14 +394,14 @@ class Parser:
         actions, gotos = self.lalrgen(C)
         self.actions = actions
         self.gotos = gotos
-    
+        n = 8
         if printInfo:
-            header = ''.join(['{:10}'.format(s) for s in ['state']+self.terminal+['$']+self.nonterminal])
+            header = ''.join(['{:8}'.format(s) for s in ['state']+self.terminal+['$']+self.nonterminal])
             print(header)
             for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
-                s = '{:10}'.format(str(k))
-                t = ''.join(['{:10}'.format(str(v.get(i,''))) for i in self.terminal+['$']])
-                n = ''.join(['{:10}'.format(str(v1.get(i,''))) for i in self.nonterminal])
+                s = '{:8}'.format(str(k))
+                t = ''.join(['{:8}'.format(str(v.get(i,''))) for i in self.terminal+['$']])
+                n = ''.join(['{:8}'.format(str(v1.get(i,''))) for i in self.nonterminal])
                 p = s+t+n
                 sp = ''.join(['-' for i in range(len(p))])
                 print(sp)

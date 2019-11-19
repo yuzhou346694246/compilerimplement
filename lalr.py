@@ -102,7 +102,7 @@ def first(A):
     if A in FIRST:
         return FIRST[A]
     if A in terminal:
-        FIRST[A] = set([A])
+        FIRST[A] = [A]
         return [A]
     if A in nonterminal:
         ps = [p for p in productions if p[0] == A]
@@ -144,7 +144,7 @@ def first(A):
             #     i = i+1
             # if i == len(p[1:]):
             #     ret.add('')
-        FIRST[A] = ret
+        FIRST[A] = list(ret)
         return ret
     return []
 
@@ -162,7 +162,7 @@ def firsts(AS):
         if '' in ret:
             ret.remove('')
     # 这里没有添加空，是因为我们采用update方法并且没有删除前面集合的空
-    return ret
+    return list(ret)
 def follow(A):
     if A in FOLLOW:
         return FOLLOW[A]
@@ -569,6 +569,7 @@ def slrparse(actions,gotos,tokens):
                 break
         else:
             print('ERROR')
+            break
 lrC = listItems()
 lalrC = lr2lalr(lrC)
 # for i,c in enumerate(lalrC):
