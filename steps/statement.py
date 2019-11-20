@@ -4,6 +4,11 @@ sys.path.append(path.join(path.dirname(__file__), '..'))
 from lalrparse import Parser
 
 productions = [
+    ['Function','function','id','(','Params',')','Stmts'],
+    ['Params','Params',',','Param'],
+    ['Params','Param'],
+    ['Params'],
+    ['Param','id'],
     ['Stmts','Stmts','Stmt'],
     ['Stmts','Stmt'],
     ['Stmt','id','=','Exp',';'],
@@ -12,8 +17,11 @@ productions = [
     # ['Stmts'],
     # ['Stmt','id','=','Exp'],
     ['Stmt','IfStmt'],
-    ['IfStmt','if','RE','Stmt'],
-    ['IfStmt','if','RE','Stmt','else','Stmt'],
+    ['Stmt','WhileStmt'],
+    ['WhileStmt','while','RE','Stmts'],
+    ['IfStmt','if','RE','Stmts'],
+    ['IfStmt','if','RE','Stmts','else','Stmts'],
+    # ['WhileStmt','while','RE','Stmt'],
     # ['IfStmt','if','(','RE',')','Stmt'],
     ['Exp','RE'],
     ['Exp','E'],
@@ -23,10 +31,11 @@ productions = [
     ['T','T','*','F'],
     ['T','F'],
     ['F','(','E',')'],
-    ['F','id']
+    ['F','id'],
+    ['F','number']
 ]
-terminal = ['id','*','+','(',')','>',';','=','if','else']
-nonterminal = ['Stmts','Stmt','IfStmt','Exp','RE','E','T','F']
+terminal = ['id','*','+','(',')','>',';','=','if','else','while','function','number']
+nonterminal = ['Stmts','WhileStmt','Stmt','IfStmt','Exp','RE','E','T','F','Function','Param','Params']
 
 precedence = {# 优先级 
     # '||':7,
@@ -60,6 +69,12 @@ parser = Parser(productions, precs, terminal, nonterminal, precedence, assosiati
 parser.generate(printInfo=True)
 # tokens = ['id','=','id','>','id',';','id','=','id','>','id']
 # tokens = ['if','(','id','>','id',')','id','=','id',';']
-# tokens = ['if','id','>','id','id','=','id','else','id','=','id',';']
-tokens= ['id','=','id',';']
+tokens = ['if','id','>','id','id','=','id',';','else','id','=','id',';']
+# tokens= ['id','=','id',';']
+tokens = ['while','id','>','id','id','=','id',';','if','id','>','id','id','=','id',';','else','id','=','id',';']
+tokens = ['function','id','(',')','while','id','>','id','id','=','id',';','if','id','>','id','id','=','id',';','else','id','=','id',';']
 parser.parse(tokens)
+'''
+function hello()
+    if 
+'''
