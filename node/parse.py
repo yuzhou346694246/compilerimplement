@@ -1,10 +1,11 @@
 
 from collections import deque
+
 class Parser:
     FIRST = {}
     FOLLOW = {}
 
-    def __init__(self, productions, precs, terminal, nonterminal, precedence, assosiation):
+    def __init__(self, productions,  terminal, nonterminal, precs={},precedence={}, assosiation={}):
         self.productions = productions
         self.precs = precs
         self.terminal = terminal
@@ -258,11 +259,12 @@ class Parser:
                 ret[v] = C[k]
         return list(ret.values())
     
-    def slrparse(self, actions, gotos, tokens):
+    def slrparse(self, actions, gotos, tokens, sdmap):
         pos = 0
         states = [0]
         symbol = []
-        tokens.append('$')
+        # tokens.append('$')
+        sdmap = {self.productions.index(p):[params,f] for p,params,f in sdmap}
         while True:
             print(states)
             print(symbol)
@@ -271,31 +273,38 @@ class Parser:
             print(tokens[pos])
             print('******************')
             current = states[-1]
-            t = tokens[pos]
+            token = tokens[pos]
+            t = token.kind
             if t in actions[current]:
                 action = actions[current][t]
                 if action.startswith('s'):#shift
                     s = int(action[1:])
-                    symbol.append(t)
+                    symbol.append(token)
                     states.append(s)
                     pos += 1
                 elif action.startswith('r'):#reduce
                     l = int(action[1:])
+                    pindexs, f = sdmap.get(l)
                     p = self.productions[l]
+                    pindexs = [i-1 for i in pindexs]
                     if len(p) >= 1:
+                        tp = -len(p)+1
+                        params = symbol[tp:]
+                        params = [params[i] for i in pindexs]
                         for i in range(len(p)-1):
                             states.pop()
                             symbol.pop()
                         top = states[-1]
                         s = gotos[top][p[0]]
                         states.append(s)
-                        symbol.append(p[0])
+                        symbol.append(f(*params))
                     else:
                         s = gotos[current][p[0]]
                         states.append(s)
                 elif action.startswith('acc'):
                     pos += 1
                     print('Accept!')
+                    return symbol[-1]
                     break
             else:
                 print('ERROR')
@@ -333,6 +342,6 @@ class Parser:
                 print(sp)
                 print(p)
     
-    def parse(self, tokens):
-        self.slrparse(self.actions, self.gotos, tokens)
+    def parse(self, tokens, sdmap):
+        self.slrparse(self.actions, self.gotos, tokens, sdmap)
 
