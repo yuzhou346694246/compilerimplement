@@ -172,8 +172,8 @@ class Parser:
                     ps = [item for item in itemlist if item[-2] == '.']
                     if len(ps) == 0:# 如果没有reduce的项目，那肯定直接返回
                         continue
-                    lf = [item[-1] for item in itemlist]
-                    if a in lf:
+                    lf = [item[-1] for item in ps]
+                    if a in lf:# 只有a在reduce 终结符里面才会reduce
                         # ps = [item[:-2] for item in itemlist if item[-1] == a]
                         ps = [p[:-2] for p in ps if p[-1] == a]
                         indexs = [str(self.productions.index(p)) for p in ps]

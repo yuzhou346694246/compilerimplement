@@ -53,5 +53,6 @@ assosiation = {# 结合律
 }
 
 
-parser = Parser(productions, precs, terminal, nonterminal, precedence, assosiation)
+parser = Parser(productions, terminal, nonterminal, precs, precedence, assosiation)
 parser.generate(printInfo=True)
+parser.checkerror()

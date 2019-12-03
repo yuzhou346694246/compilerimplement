@@ -3,17 +3,22 @@ from os import path
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from lalrparse import Parser
 
+# productions = [
+#     ['S','i','S','e','S'],
+#     ['S','i','S'],
+#     ['S','1']
+# ]
+
+# terminal = ['i','e','1']
+# nonterminal = ['S']
 productions = [
-    ['RE','E','>','E'],
-    ['E','E','+','T'],
-    ['E','T'],
-    ['T','T','*','F'],
-    ['T','F'],
-    ['F','(','E',')'],
-    ['F','id']
+    ['Params','Params',',','Param'],
+    ['Params','Param'],
+    ['Param','id'],
+    # ['Params']
 ]
-terminal = ['id','*','+','(',')','>']
-nonterminal = ['RE','E','T','F']
+terminal = ['id',',']
+nonterminal = ['Params','Param']
 
 precedence = {# 优先级 
     # '||':7,
@@ -45,5 +50,5 @@ precs = {
 
 parser = Parser(productions, terminal, nonterminal, precs, precedence, assosiation)
 parser.generate(printInfo=True)
-tokens = ['id','+','id','>','id']
+tokens = ['id',',','id']
 parser.parse(tokens)

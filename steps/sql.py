@@ -2,32 +2,35 @@ import sys
 from os import path
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from lalrparse import Parser
-
+# create-table-statement = create table id ()
 productions = [
-    ['Function','function','id','(','Params',')','Stmts'],
+    ['CreateTableStat','create','table','Name','(','Params',')'],
     ['Params','Params',',','Param'],
     ['Params','Param'],
-    ['Params'],
-    ['Param','id'],
-    ['Stmts','Stmts','Stmt'],
-    ['Stmts','Stmt'],
-    ['Stmts'],
-    ['Stmt','id','=','Exp',';'],
-    ['Stmt','IfStmt'],
-    ['Stmt','WhileStmt'],
-    ['WhileStmt','while','RE','Stmts'],
-    ['IfStmt','if','RE','Stmts'],
-    ['IfStmt','if','RE','Stmts','else','Stmts'],
-    ['Exp','RE'],
-    ['Exp','E'],
-    ['RE','E','>','E'],
-    ['E','E','+','T'],
-    ['E','T'],
-    ['T','T','*','F'],
-    ['T','F'],
-    ['F','(','E',')'],
-    ['F','id'],
-    ['F','number']
+    ['Param','id','DateType'],
+    ['DataType','int'],
+    ['DataType','char'],
+    ['DeleteStatSearched','delete','from','Name','WhereStat'],
+    ['WhereStat'],
+    ['WhereStat','where',]
+    # ['Stmts','Stmts','Stmt'],
+    # ['Stmts','Stmt'],
+    # ['Stmt','id','=','Exp',';'],
+    # ['Stmt','IfStmt'],
+    # ['Stmt','WhileStmt'],
+    # ['WhileStmt','while','RE','Stmts'],
+    # ['IfStmt','if','RE','Stmts'],
+    # ['IfStmt','if','RE','Stmts','else','Stmts'],
+    # ['Exp','RE'],
+    # ['Exp','E'],
+    # ['RE','E','>','E'],
+    # ['E','E','+','T'],
+    # ['E','T'],
+    # ['T','T','*','F'],
+    # ['T','F'],
+    # ['F','(','E',')'],
+    # ['F','id'],
+    # ['F','number']
 ]
 terminal = ['id','*','+','(',')','>',';','=','if','else','while','function','number']
 nonterminal = ['Stmts','WhileStmt','Stmt','IfStmt','Exp','RE','E','T','F','Function','Param','Params']
@@ -69,7 +72,6 @@ tokens = ['if','id','>','id','id','=','id',';','else','id','=','id',';']
 tokens = ['while','id','>','id','id','=','id',';','if','id','>','id','id','=','id',';','else','id','=','id',';']
 tokens = ['function','id','(',')','while','id','>','id','id','=','id',';','if','id','>','id','id','=','id',';','else','id','=','id',';']
 parser.parse(tokens)
-parser.checkerror()
 '''
 function hello()
     if 

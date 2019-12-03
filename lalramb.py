@@ -72,18 +72,18 @@
 #     'UMINUS':'R'
 # }
 
-productions = [
-    ['S','i','S','e','S'],
-    ['S','i','S'],
-    ['S','1']
-]
+# productions = [
+#     ['S','i','S','e','S'],
+#     ['S','i','S'],
+#     ['S','1']
+# ]
 
-precs = {
-    # 'UMINUS':['E','-','E']
-}
+# precs = {
+#     # 'UMINUS':['E','-','E']
+# }
 
-terminal = ['i','1','e']
-nonterminal = ['S']
+# terminal = ['i','1','e']
+# nonterminal = ['S']
 precedence = {# 优先级 
     # '+':10,
     # '-':10,
@@ -103,6 +103,14 @@ assosiation = {# 结合律
 ## CLOUSE
 ## ['E','.','E','+','T']
 
+productions = [
+    ['Params','Params',',','Param'],
+    ['Params','Param'],
+    ['Params'],
+    ['Param','id']
+]
+terminal = ['id',',']
+nonterminal = ['Params','Param']
 
 def prehandle():
     p = ['START',productions[0][0]]
@@ -683,5 +691,5 @@ for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
     print(p)
 
 # tokens = ['id','+','id','+','-','id']
-tokens = ['i','1','e','1']
+tokens = ['id',',','id']
 slrparse(actions, gotos, tokens)

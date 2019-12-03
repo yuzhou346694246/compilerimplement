@@ -4,7 +4,7 @@ class Parser:
     FIRST = {}
     FOLLOW = {}
 
-    def __init__(self, productions, precs, terminal, nonterminal, precedence, assosiation):
+    def __init__(self, productions, terminal, nonterminal,precs={}, precedence={}, assosiation={}):
         self.productions = productions
         self.precs = precs
         self.terminal = terminal
@@ -171,7 +171,7 @@ class Parser:
                     ps = [item for item in itemlist if item[-2] == '.']
                     if len(ps) == 0:# 如果没有reduce的项目，那肯定直接返回
                         continue
-                    lf = [item[-1] for item in itemlist]
+                    lf = [item[-1] for item in ps]
                     if a in lf:
                         # ps = [item[:-2] for item in itemlist if item[-1] == a]
                         ps = [p[:-2] for p in ps if p[-1] == a]
@@ -301,12 +301,19 @@ class Parser:
                 print('ERROR')
                 break
     
+    def checkerror(self):
+        for state,action in self.actions.items():
+            for k,v in action.items():
+                if v == 'r':
+                    print('Reduce undefined:State:{},Token:{}'.format(state,k))
+
     def generate(self,printInfo=False):
         self.addstart()#这里是LR扩展文法
         self.productions2items()
         lrC = self.listItems()
         lalrC = self.lr2lalr(lrC)
         C = lalrC#listlalritems()
+        self.lalritems = C
         if printInfo:
             print('---------------------------------')
             for i,c in enumerate(C):
