@@ -259,6 +259,9 @@ class Parser:
                 ret[v] = C[k]
         return list(ret.values())
     
+    '''
+    这个版本的分析器能
+    '''
     def slrparse(self, actions, gotos, tokens, sdmap):
         pos = 0
         states = [0]

@@ -417,7 +417,7 @@ def lalrgen(C):
                 ps = [item for item in itemlist if item[-2] == '.']
                 if len(ps) == 0:# 如果没有reduce的项目，那肯定直接返回
                     continue
-                lf = [item[-1] for item in itemlist]
+                lf = [item[-1] for item in ps]#itemlist->ps
                 if a in lf:
                     # ps = [item[:-2] for item in itemlist if item[-1] == a]
                     ps = [p[:-2] for p in ps if p[-1] == a]

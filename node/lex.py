@@ -1,13 +1,14 @@
 from enum import Enum
 class Token:
-    def __init__(self, kind, pos, text, val=None):
+    def __init__(self, kind, pos, text, val=None, lineno=0):
         self.kind = kind
         self.pos = pos
         self.text = text
         self.val = val
+        self.lineno = lineno
 
     def __str__(self):
-        return 'tokenKind:{},pos:{},text:{},val:{}'.format(self.kind, self.pos, self.text, self.val)
+        return 'tokenKind:{},pos:{},text:{},val:{}, lineno:{}'.format(self.kind, self.pos, self.text, self.val, self.lineno)
 # class TokenType(Enum):
 
 class Lexer:
