@@ -62,18 +62,27 @@ class SyntaxMap:
         nont = []
         tt = []
         for p in self._productions:
-            if p[0][0].isupper() :
-                if p[0] not in nont:
-                    nont.append(p[0])
-
+            if p[0] not in nont:
+                nont.append(p[0])
+        
+        for p in self._productions:
             for t in p[1:]:
-                if t.islower():
-                    if t not in tt:
-                        tt.append(t)
+                if t not in nont:
+                    tt.append(t)
 
-                if not t.isalnum():
-                    if t not in tt:
-                        tt.append(t)
+        # for p in self._productions:
+            # if p[0][0].isupper() :
+            #     if p[0] not in nont:
+            #         nont.append(p[0])
+
+            # for t in p[1:]:
+            #     if t.islower():
+            #         if t not in tt:
+            #             tt.append(t)
+
+            #     if not t.isalnum():
+            #         if t not in tt:
+            #             tt.append(t)
         self._nonterminal = nont
         self._terminal = tt
 

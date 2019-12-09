@@ -11,7 +11,7 @@ class Token:
         return 'tokenKind:{},pos:{},text:{},val:{}, lineno:{}'.format(self.kind, self.pos, self.text, self.val, self.lineno)
     
     def __repr__(self):
-        return 'tokenKind:{},pos:{},text:{},val:{}, lineno:{}'.format(self.kind, self.pos, self.text, self.val, self.lineno)
+        return 'Token:'+self.kind
 
 class Lexer:
     def __init__(self, filename, terminal, patterns):
@@ -23,14 +23,26 @@ class Lexer:
     def escape(self):
         reserve = '{}[]()|*+^?.'
         ret = []
+        delay = []
+        nt = []
+        dnt = []
         for tt in self.terminal:
             if tt in self.patterns:
-                ret.append(t2re[tt])
+                # ret.append(t2re[tt])
+                # delay.append(self.patterns[tt])
+                dnt.append(tt)
             else:
                 ret.append(''.join(['\\'+t if t in reserve else t for t in tt]))
+                nt.append(tt)
+        # ret.extend(delay)
+        # nt.extend(dnt)
+        t2p = {k:v for k,v in self.patterns.items() if k in dnt}
+        nt.extend(list(t2p.keys()))
+        ret.extend(list(t2p.values()))
         ret.append('\s+') # 空白符号
         ret.append('.+?') # 其它任意字符，加入? 改变其模式（不贪婪）
         ret = '|'.join(['('+t+ ')' for t in ret])
+        self.terminal = nt# 调整了terminal的顺序
         self.reexp = ret
         self.pattern = re.compile(ret)
     
@@ -50,26 +62,27 @@ class Lexer:
                         # continue
                         print('error')
                         raise Exception('Unexpected word')
-                    print(Token(self.terminal[index-1],i.pos,text,lineno=self.lineno))
+                    yield Token(self.terminal[index-1],i.span()[0],text,lineno=self.lineno)
+            yield Token('$',-1,'',-1)
     
 
 
-terminal = ['{','}','=',';','int','if','else','while','do','break',
-            '||','&&','==','!=','<','<=','>','>=','+','-','*','/','!',
-            '(',')','[',']','num','false','true','real','id']
-t2re = {'id':'[a-zA-Z_]\w*','num':'\d+','real':'\d*\.\d+'}
+# terminal = ['{','}','=',';','int','if','else','while','do','break',
+#             '||','&&','==','!=','<','<=','>','>=','+','-','*','/','!',
+#             '(',')','[',']','num','false','true','real','id']
+# t2re = {'id':'[a-zA-Z_]\w*','num':'\d+','real':'\d*\.\d+'}
 
 # 匹配越宽的表达式放在最后面 比如id的表达式是可以匹配true的
-reserve = '{}[]()|*+^?.'
+# reserve = '{}[]()|*+^?.'
 
-def escape(terminal):
-    ret = []
-    for tt in terminal:
-        if tt in t2re:
-            ret.append(t2re[tt])
-        else:
-            ret.append(''.join(['\\'+t if t in reserve else t for t in tt]))
-    return ret
+# def escape(terminal):
+#     ret = []
+#     for tt in terminal:
+#         if tt in t2re:
+#             ret.append(t2re[tt])
+#         else:
+#             ret.append(''.join(['\\'+t if t in reserve else t for t in tt]))
+#     return ret
 
 # nt = escape(terminal)
 # nt.append('\s+')
@@ -92,11 +105,19 @@ def escape(terminal):
 #     print('----------')
 #     print('{}:{}'.format(index,text))
 
-lexer = Lexer('steps/test.lex',terminal,t2re) #使用调试器运行代码，当前目录下文件访问存在问题
-# 此时当前目录是compiler 而不是二级目录steps
+'''
+# test.lex
+if a>b 
+    c =3
+else 
+    a=1
+'''
 
+# lexer = Lexer('steps/test.lex',terminal,t2re) #使用调试器运行代码，当前目录下文件访问存在问题
+# # 此时当前目录是compiler 而不是二级目录steps
+
+# # print(list(lexer.lex()))
 # print(list(lexer.lex()))
-lexer.lex()
 
 # with open('steps/test.lex','r') as f:
 #     print(f.readlines())

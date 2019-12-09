@@ -260,7 +260,7 @@ class Parser:
         return list(ret.values())
     
     '''
-    这个版本的分析器能
+    这个版本的分析器能接受语法动作
     '''
     def slrparse(self, actions, gotos, tokens, sdmap):
         pos = 0
@@ -346,5 +346,5 @@ class Parser:
                 print(p)
     
     def parse(self, tokens, sdmap):
-        self.slrparse(self.actions, self.gotos, tokens, sdmap)
+        return self.slrparse(self.actions, self.gotos, tokens, sdmap)
 

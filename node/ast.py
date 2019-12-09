@@ -1,11 +1,21 @@
 from collections import namedtuple
 from syntaxmap import SyntaxMap
 from parse import Parser
+from os import path
+import sys
+sys.path.append(path.join(path.dirname(__file__), '..'))
+from steps.lex import Lexer
 class AssignStmt:
     def __init__(self, var, right):
         self.kind = 'AssignStmt'
         self.var = var
         self.right = right
+    
+    def __str__(self):
+        return 'AssignStmt'
+    
+    def __repr__(self):
+        return self.kind
 
 class IfStmt:
     def __init__(self, exp, stmt1, stmt2):
@@ -14,35 +24,82 @@ class IfStmt:
         self.stmt1 = stmt1
         self.stmt2 = stmt2
 
+    def __str__(self):
+        return 'IfStmt'
+    
+    def __repr__(self):
+        return self.kind
+
 class WhileStmt:
     def __init__(self, exp, stmt):
         self.kind = 'WhileStmt'
         self.exp = exp
         self.stmt = stmt
+    
+    def __str__(self):
+        return 'WhileStmt'
+    
+    def __repr__(self):
+        return self.kind
 
 class BlockStmt:
     def __init__(self, stmts):
         self.kind = 'BlockStmt'
         self.stmts = stmts
+    
+    def __str__(self):
+        return 'BlockStmt'
+    
+    def __repr__(self):
+        return self.kind
 
 class Stmts:
     def __init__(self, stmts, stmt):
         self.kind = 'Stmts'
         self.stmts = stmts
         self.stmt = stmt
+    
+    def __str__(self):
+        return 'Stmts'
+    
+    def __repr__(self):
+        return self.kind
 
 class ExpNode:
     def __init__(self, op, operand1, operand2):# 一元只使用operand1
         self.kind = op
         self.operand1 = operand1
         self.operand2 = operand2
+    
+    def __str__(self):
+        return self.kind
+    
+    def __repr__(self):
+        return 'ExpNode:' + self.kind
 
 class SingleNode:
     def __init__(self, kind, token):
         self.kind = kind
         self.token = token
+    
+    def __str__(self):
+        return self.kind
+    
+    def __repr__(self):
+        return self.kind+':'+self.token.text
 
 sm = SyntaxMap()
+'''
+Stmts->Stmts ; Stmt | Stmt
+Stmt -> id = Exp |
+        if ( Exp ) Stmt |
+        if ( Exp ) Stmt else Stmt |
+        While ( Exp ) Stmt |
+        { Stmts }
+Exp  -> Exp + Exp
+Exp  -> id
+Exp  -> num
+'''
 
 @sm.syntaxmap(['Stmts','Stmts',';','Stmt'],[1,3])
 def stmtsfunc1(stmts, stmt):
@@ -64,7 +121,7 @@ def stmtfunc2(exp, stmt1, stmt2):
 def stmtfunc3(exp, stmt):
     return IfStmt(exp, stmt, None)
 
-@sm.syntaxmap(['Stmt','While','(','Exp',')','Stmt'],[3,5])
+@sm.syntaxmap(['Stmt','while','(','Exp',')','Stmt'],[3,5])
 def stmtfunc4(exp, stmt):
     return WhileStmt(exp, stmt)
 
@@ -87,4 +144,14 @@ def expfunc2(token):
         return SingleNode('num', token)
 
 parser = Parser(sm.productions, sm.terminal, sm.nonterminal)
+
+# print(sm.terminal)
+t2p = {'id':'[a-zA-Z_]\w*','num':'\d+'}
+lexer = Lexer('node/test.dm',sm.terminal,t2p)
+# print(list(lexer.lex()))
+# for t in lexer.lex():
+#     print(t)
+
 parser.generate(printInfo=True)
+tokens = list(lexer.lex())
+parser.parse(tokens ,sm.sdmap)
