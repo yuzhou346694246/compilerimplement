@@ -104,7 +104,7 @@ precs = {
 }
 
 parser = Parser(productions,  terminal, nonterminal,precs, precedence, assosiation)
-parser.generate(printInfo=True)
+parser.generate()
 # parser.generate(printInfo=False)
 tokens = ['id','>','id']
 parser.checkerror()
@@ -113,3 +113,4 @@ parser.checkerror()
 function hello()
     if 
 '''
+parser.htmlparse()

@@ -331,7 +331,7 @@ class Parser:
         if printInfo:
             header = ''.join(['{:8}'.format(s) for s in ['state']+self.terminal+['$']+self.nonterminal])
             print(header)
-            for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
+            for (k,v),(k1,v1) in zip(self.actions.items(), self.gotos.items()):
                 s = '{:8}'.format(str(k))
                 t = ''.join(['{:8}'.format(str(v.get(i,''))) for i in self.terminal+['$']])
                 n = ''.join(['{:8}'.format(str(v1.get(i,''))) for i in self.nonterminal])
@@ -340,6 +340,27 @@ class Parser:
                 print(sp)
                 print(p)
     
+    def htmlparse(self,filename='temp.html'):
+        header = ['state']+self.terminal+['$']+self.nonterminal
+        body = []
+        formatstr = '<td>{}</td>'
+        header = ''.join([formatstr.format(i) for i in header])
+        for (k,v),(k1,v1) in zip(self.actions.items(), self.gotos.items()):
+                s = [str(k)]
+                t = [str(v.get(i,'')) for i in self.terminal+['$']]
+                n = [str(v1.get(i,'')) for i in self.nonterminal]
+                p = s+t+n
+                body.append(''.join([formatstr.format(i) for i in p]))
+        formatline = '<tr>{}</tr>'
+        formattable = '<table>{}</table>'
+        body = ''.join([formatline.format(i) for i in body])
+        header = formatline.format(header)
+        table = header + body
+        table = formattable.format(table)
+        with open(filename,'w') as f:
+            f.write(table)
+        # return header+body
+
     def parse(self, tokens):
         self.slrparse(self.actions, self.gotos, tokens)
 

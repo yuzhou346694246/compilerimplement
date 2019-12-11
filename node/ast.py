@@ -154,4 +154,5 @@ lexer = Lexer('node/test.dm',sm.terminal,t2p)
 
 parser.generate(printInfo=True)
 tokens = list(lexer.lex())
-parser.parse(tokens ,sm.sdmap)
+tree = parser.parse(tokens ,sm.sdmap)
+print(tree)
