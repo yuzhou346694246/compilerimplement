@@ -5,103 +5,149 @@ from os import path
 import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from steps.lex import Lexer
-class AssignStmt:
-    def __init__(self, var, right):
-        self.kind = 'AssignStmt'
-        self.var = var
-        self.right = right
-    
+class SyntaxNode:
     def __str__(self):
-        return 'AssignStmt'
-    
+        return self.kind
     def __repr__(self):
         return self.kind
 
-class IfStmt:
+    
+class Stmt(SyntaxNode):
+    pass
+
+class AssignStmt(Stmt):
+    def __init__(self, token, right):
+        self.kind = 'AssignStmt'
+        self.name = token.text
+        self.token = token
+        self.right = right
+
+class IfStmt(Stmt):
     def __init__(self, exp, stmt1, stmt2):
         self.kind = 'IfStmt'
         self.exp = exp
         self.stmt1 = stmt1
         self.stmt2 = stmt2
 
-    def __str__(self):
-        return 'IfStmt'
-    
-    def __repr__(self):
-        return self.kind
 
-class WhileStmt:
+class WhileStmt(Stmt):
     def __init__(self, exp, stmt):
         self.kind = 'WhileStmt'
         self.exp = exp
         self.stmt = stmt
-    
-    def __str__(self):
-        return 'WhileStmt'
-    
-    def __repr__(self):
-        return self.kind
 
-class BlockStmt:
+class BlockStmt(Stmt):
     def __init__(self, stmts):
         self.kind = 'BlockStmt'
         self.stmts = stmts
-    
-    def __str__(self):
-        return 'BlockStmt'
-    
-    def __repr__(self):
-        return self.kind
 
-class Stmts:
+class Stmts(Stmt):
     def __init__(self, stmts, stmt):
         self.kind = 'Stmts'
-        self.stmts = stmts
-        self.stmt = stmt
+        if stmts is None:
+            self.stmts = []
+        else:
+            self.stmts = stmts.stmts
+        self.stmts.append(stmt)
     
-    def __str__(self):
-        return 'Stmts'
+#     def __str__(self):
+#         return 'Stmts'
     
-    def __repr__(self):
-        return self.kind
+#     def __repr__(self):
+#         return self.kind
 
-class ExpNode:
-    def __init__(self, op, operand1, operand2):# 一元只使用operand1
+class Exp(SyntaxNode):
+    pass
+
+class UnaryOperator(Exp):
+    def __init__(self, op, exp):
         self.kind = op
-        self.operand1 = operand1
-        self.operand2 = operand2
-    
-    def __str__(self):
-        return self.kind
-    
-    def __repr__(self):
-        return 'ExpNode:' + self.kind
+        self.exp = exp
 
-class SingleNode:
-    def __init__(self, kind, token):
-        self.kind = kind
+class BinaryOperator(Exp):
+    def __init__(self, op, left, right): 
+        self.kind = op
+        self.left = left
+        self.right = right
+
+class ConstInt(Exp):
+    def __init__(self, token):
+        self.kind = 'ConstInt'
+        self.val = token.val
         self.token = token
+
+class IdExp(Exp):
+    def __init__(self, token):
+        self.kind = 'IdExp'
+        self.name = token.text
+        self.token = token    
+
+class DeclNode(SyntaxNode):
+    pass
+
+class DeclVar(DeclNode):# 声明变量节点
+    def __init__(self, token,typenode):
+        self.kind = 'DeclVar'
+        self.name = token.text
+        self.token = token
+        self.typenode = typenode
+
+class DeclType(SyntaxNode):
+    pass
+
+class DeclRecord(DeclType):
+    def __init__(self, token, typenode):
+        self.kind = 'DeclRecord'
+        self.name = token.text
+        self.typenode = typenode
+
+class TypeNode(SyntaxNode):
+    pass
+
+
+class IntType(TypeNode):# 整数类型节点
+    def __init__(self, token):
+        self.kind = 'IntType'
+        self.token = token
+
+class IdType(TypeNode):
+    def __init__(self, token):
+        self.kind = 'IdType'
+        self.name = token.text
+        self.token = token 
+
+class RecordType(TypeNode):
+    def __init__(self, fields):
+        self.kind = 'RecordType'
+        self.fields = fields
+
+class RecordField(TypeNode):
+    def __init__(self, token, typenode):
+        self.kind = 'RecordField'
+        self.name = token.text
+        self.token = token
+        self.typenode = typenode
+
+
     
-    def __str__(self):
-        return self.kind
-    
-    def __repr__(self):
-        return self.kind+':'+self.token.text
+
 
 sm = SyntaxMap()
 '''
-Stmts->Stmts ; Stmt | Stmt
+Stmts->Stmts  Stmt | Stmt
 Stmt -> id = Exp |
         if ( Exp ) Stmt |
         if ( Exp ) Stmt else Stmt |
         While ( Exp ) Stmt |
         { Stmts }
+        Type id 
+Type -> int
 Exp  -> Exp + Exp
 Exp  -> id
 Exp  -> num
 '''
 
-@sm.syntaxmap(['Stmts','Stmts',';','Stmt'],[1,3])
+@sm.syntaxmap(['Stmts','Stmts','Stmt'],[1,2])#
 def stmtsfunc1(stmts, stmt):
     return Stmts(stmts, stmt)
 
@@ -110,8 +156,8 @@ def stmtsfunc2(stmt):
     return Stmts(None, stmt)
 
 @sm.syntaxmap(['Stmt','id','=','Exp'],[1,3])
-def stmtfunc1(var, right):
-    return AssignStmt(var, right)
+def stmtfunc1(token, right):
+    return AssignStmt(token, right)
 
 @sm.syntaxmap(['Stmt','if','(','Exp',')','Stmt','else','Stmt'],[3,5,7])
 def stmtfunc2(exp, stmt1, stmt2):
@@ -125,34 +171,71 @@ def stmtfunc3(exp, stmt):
 def stmtfunc4(exp, stmt):
     return WhileStmt(exp, stmt)
 
-@sm.syntaxmap(['Stmt','{','Stmts','}'],[3])
+@sm.syntaxmap(['Stmt','{','Stmts','}'],[2])
 def stmtfunc5(stmts):
     return BlockStmt(stmts)
+
+@sm.syntaxmap(['Stmt','Type','id'],[1,2])
+def stmtfunc6(typenode, token):
+    #idnode = SingleNode('id', token)
+    return DeclVar(token,typenode)
+
+@sm.syntaxmap(['Stmt','record','id','{','Fields','}'],[2,4])
+def stmtfunc7(token, fields):
+    typenode = RecordType(fields)
+    return DeclRecord(token, typenode)
+
+@sm.syntaxmap(['Fields','Fields',',','Field'],[1,3])
+def fieldsfunc1(fields,field):
+    fields.append(field)
+    return fields
+
+@sm.syntaxmap(['Fields','Field'],[1])
+def fieldsfunc2(field):
+    return [field]
+
+@sm.syntaxmap(['Fields'],[])
+def fieldsfunc3():
+    return []
+
+@sm.syntaxmap(['Field','Type','id'],[1,2])
+def fieldfunc1(typenode, token):
+    return RecordField(token, typenode)
+
+@sm.syntaxmap(['Type','int'],[1])
+def typefunc1(token):
+    return IntType(token)
+
+@sm.syntaxmap(['Type','id'],[1])
+def typefunc2(token):
+    return IdType(token)
 
 @sm.syntaxmap(['Exp','Exp','+','Exp'],[1,2,3])
 def expfunc1(left,op,right):
     if op.kind == '+':
-        return ExpNode('+',left,right)
+        return BinaryOperator('Plus',left,right)
 
 @sm.syntaxmap(['Exp','id'],[1])
 @sm.syntaxmap(['Exp','num'],[1])
 def expfunc2(token):
     if token.kind == 'id':
-        return SingleNode('id', token)
+        return IdExp(token)
     
     if token.kind == 'num':
-        return SingleNode('num', token)
+        return ConstInt(token)
 
 parser = Parser(sm.productions, sm.terminal, sm.nonterminal)
 
 # print(sm.terminal)
 t2p = {'id':'[a-zA-Z_]\w*','num':'\d+'}
 lexer = Lexer('node/test.dm',sm.terminal,t2p)
+# lexer = Lexer('test2.dm',sm.terminal,t2p)
 # print(list(lexer.lex()))
 # for t in lexer.lex():
 #     print(t)
 
-parser.generate(printInfo=True)
+parser.generate()
+parser.htmlparse('test.html')
 tokens = list(lexer.lex())
 tree = parser.parse(tokens ,sm.sdmap)
 print(tree)

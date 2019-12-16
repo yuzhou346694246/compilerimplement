@@ -1,8 +1,8 @@
 # symbol table
 class Symbol:
-    def __init__(self, name, info, var=None, level=None, depth=None):
+    def __init__(self, name, attribute, var=None, level=None, depth=None):
         self.name = name # 标识符名字
-        self.info = info # 关联的信息，类型或者其它
+        self.attribute = attribute # 关联的信息，类型或者其它
         self.var = var # 同名标识符的上一层次符号
         self.level = level # 
         self.depth = depth
@@ -12,6 +12,33 @@ class Symbol:
     
     def __repr__(self):
         return self.name
+
+class Attribute:
+    def __init__(self, kind, typedescriptor):
+        self.kind = kind
+        self.typedescriptor = typedescriptor
+
+class VarAttribute(Attribute):
+    def __init__(self, typedescriptor):
+        self.kind = 'VAR'
+        self.typedescriptor = typedescriptor
+    
+class TypeAttribute(Attribute):
+    def __init__(self, typedescriptor):
+        self.kind = 'Type'
+        self.typedescriptor = typedescriptor
+
+class TypeDescriptor:
+    pass
+
+class IntegerTypeDescriptor(TypeDescriptor):
+    def __init__(self):
+        self.typekind = 'Integer'
+
+class RecordTypeDescriptor(TypeDescriptor):
+    def __init__(self, fields):
+        self.typekind = 'Record'
+        self.fields = fields
 
 class SymbolTable:
     def __init__(self):
@@ -37,14 +64,24 @@ class SymbolTable:
     
     def get(self, name):
         self.tb.get(name,None)
-    
-    def enter(self,name,info):
+
+    '''
+    检测变量是否已经在当前作用域声明
+    '''
+    def declaredlocally(self, name):
+        sym = self.get(name)
+        if sym is None or sym.depth != self.depth:
+            return False
+        return True
+
+    def enter(self,name,attribute):
         oldsym = self.get(name)
+        # 不能在当前作用域重复声明一个符号
         if oldsym is not None and oldsym.depth == self.depth:
             # if oldsym.depth == self.depth:
             print('Error:duplicated declaration of {}'.format(name)) 
             return
-        newsym = Symbol(name, info,level=self.scope, depth=self.depth)
+        newsym = Symbol(name, attribute,level=self.scope, depth=self.depth)
         self.scope.append(newsym)
         if oldsym is not None:
             newsym.var = oldsym

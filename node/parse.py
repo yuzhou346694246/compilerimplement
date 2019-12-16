@@ -135,6 +135,18 @@ class Parser:
             else:
                 print(s)
 
+    @staticmethod
+    def htmlitems(I):
+        ret = []
+        pp = '<p>{}</p>'
+        for i,item in enumerate(I):
+            s = ' '.join(item[1:])
+            n = '({}) '.format(i)
+            s = '{}->{}'.format(item[0],s)
+            s = s+'<br>'    
+            ret.append(n+s)
+        return pp.format(''.join(ret))
+
     def listItems(self):
         ret = []
         # C = closure([items[0]])
@@ -319,6 +331,7 @@ class Parser:
         lrC = self.listItems()
         lalrC = self.lr2lalr(lrC)
         C = lalrC#listlalritems()
+        self.C = C
         if printInfo:
             print('---------------------------------')
             for i,c in enumerate(C):
@@ -344,6 +357,37 @@ class Parser:
                 sp = ''.join(['-' for i in range(len(p))])
                 print(sp)
                 print(p)
+    
+    def htmlparse(self,filename='temp.html'):
+        shtml = []
+        pformat = '<p>{}</p>'
+        for i,c in enumerate(self.C):
+            i = str(i)+'<br>'
+            h = Parser.htmlitems(c)
+            shtml.append(i+h)
+        shtml = pformat.format(''.join(shtml))
+
+        phtml = Parser.htmlitems(self.productions)
+
+        header = ['state']+self.terminal+['$']+self.nonterminal
+        body = []
+        formatstr = '<td>{}</td>'
+        header = ''.join([formatstr.format(i) for i in header])
+        for (k,v),(k1,v1) in zip(self.actions.items(), self.gotos.items()):
+                s = [str(k)]
+                t = [str(v.get(i,'')) for i in self.terminal+['$']]
+                n = [str(v1.get(i,'')) for i in self.nonterminal]
+                p = s+t+n
+                body.append(''.join([formatstr.format(i) for i in p]))
+        formatline = '<tr>{}</tr>'
+        formattable = '<table>{}</table>'
+        body = ''.join([formatline.format(i) for i in body])
+        header = formatline.format(header)
+        table = header + body
+        table = formattable.format(table)
+        content = phtml+shtml+table
+        with open(filename,'w') as f:
+            f.write(content)
     
     def parse(self, tokens, sdmap):
         return self.slrparse(self.actions, self.gotos, tokens, sdmap)
