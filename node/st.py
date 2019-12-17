@@ -51,10 +51,15 @@ class RecordTypeDescriptor(TypeDescriptor):
         self.typekind = 'Record'
         self.fields = fields
 
+class BooleanTypeDescriptor(TypeDescriptor):
+    def __init__(self):
+        self.typekind = 'Boolean'
+
 class SymbolTable:
     def __init__(self):
         self.tb = {}
-        self.scope = Scope()
+        self.scope = Scope(None)
+        self.depth = 1
 
     def openscope(self):
         self.depth = self.depth+1
@@ -76,7 +81,7 @@ class SymbolTable:
         del self.tb[sym.name]
     
     def get(self, name):
-        self.tb.get(name,None)
+        return self.tb.get(name,None)
 
     '''
     检测变量是否已经在当前作用域声明
@@ -95,7 +100,7 @@ class SymbolTable:
             print('Error:duplicated declaration of {}'.format(name)) 
             return
         newsym = Symbol(name, attribute,level=self.scope, depth=self.depth)
-        self.scope.append(newsym)
+        self.scope.add(newsym)
         if oldsym is not None:
             newsym.var = oldsym
             self.tb[name] = newsym # 替代 remove(oldsym) add(newsym)

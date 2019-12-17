@@ -392,12 +392,14 @@ class Parser:
     
     def dumpjson(self, filename='actions.json'):
         with open(filename,'w') as f:
-            json.dump([self.actions,self.gotos, self.C],f)
+            json.dump([self.actions,self.gotos, self.C, self.productions],f)
     
     def loadjson(self, filename='actions.json'):
         with open(filename,'r') as f:
-            self.actions,self.gotos, self.C = json.load(f)
-    
+            self.actions,self.gotos, self.C, self.productions = json.load(f)
+        self.actions = {int(k):v for k,v in self.actions.items()}
+        self.gotos = {int(k):v for k,v in self.gotos.items()}
+        
     def parse(self, tokens, sdmap):
         return self.slrparse(self.actions, self.gotos, tokens, sdmap)
 

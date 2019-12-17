@@ -60,6 +60,11 @@ class Stmts(Stmt):
 class Exp(SyntaxNode):
     pass
 
+class Parentheses(Exp):
+    def __init__(self,exp):
+        self.kind = 'Parentheses'
+        self.exp = exp
+
 class UnaryOperator(Exp):
     def __init__(self, op, exp):
         self.kind = op
@@ -212,9 +217,56 @@ def typefunc2(token):
     return IdType(token)
 
 @sm.syntaxmap(['Exp','Exp','+','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','-','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','*','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','/','Exp'],[1,2,3])
 def expfunc1(left,op,right):
     if op.kind == '+':
         return BinaryOperator('Plus',left,right)
+    if op.kind == '-':
+        return BinaryOperator('Minus',left,right)
+    if op.kind == '*':
+        return BinaryOperator('Multiply',left,right)
+    if op.kind == '/':
+        return BinaryOperator('Divide',left,right)
+
+@sm.syntaxmap(['Exp','Exp','>','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','<','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','>=','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','<=','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','!=','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','==','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','||','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','&&','Exp'],[1,2,3])
+def exprelfunc(left,op,right):
+    if op.kind == '>':
+        return BinaryOperator('GT',left,right)
+    if op.kind == '<':
+        return BinaryOperator('ST',left,right)
+    if op.kind == '>=':
+        return BinaryOperator('GE',left,right)
+    if op.kind == '<=':
+        return BinaryOperator('SE',left,right)
+    if op.kind == '!=':
+        return BinaryOperator('NE',left,right)
+    if op.kind == '==':
+        return BinaryOperator('EQ',left,right)
+    if op.kind == '||':
+        return BinaryOperator('OR',left,right)
+    if op.kind == '&&':
+        return BinaryOperator('AND',left,right)
+
+@sm.syntaxmap(['Exp','!','Exp'],[1,2])
+@sm.syntaxmap(['Exp','-','Exp'],[1,2])
+def expunaryfunc(op, exp):
+    if op.kind == '!':
+        reutrn UnaryOperator('NOT',exp)
+    if op.kind == '-':
+        return UnaryOperator('NEG',exp)
+
+@sm.syntaxmap(['Exp','(','Exp',')'],[2])
+def expparentheses(exp):
+    return Parentheses(exp)
 
 @sm.syntaxmap(['Exp','id'],[1])
 @sm.syntaxmap(['Exp','num'],[1])
@@ -229,7 +281,7 @@ parser = Parser(sm.productions, sm.terminal, sm.nonterminal)
 
 # print(sm.terminal)
 t2p = {'id':'[a-zA-Z_]\w*','num':'\d+'}
-lexer = Lexer('node/test.dm',sm.terminal,t2p)
+lexer = Lexer('node/test2.dm',sm.terminal,t2p)
 # lexer = Lexer('test2.dm',sm.terminal,t2p)
 # print(list(lexer.lex()))
 # for t in lexer.lex():
@@ -238,9 +290,9 @@ lexer = Lexer('node/test.dm',sm.terminal,t2p)
 # parser.generate()
 # parser.dumpjson()
 parser.loadjson()
-parser.htmlparse('test.html')
+# parser.htmlparse('test.html')
 tokens = list(lexer.lex())
 tree = parser.parse(tokens ,sm.sdmap)
-# typeCheck = TypeCheck(tree)
-# typeCheck.init()
-# typeCheck.accept()
+typeCheck = TypeCheck(tree)
+typeCheck.init()
+typeCheck.accept()

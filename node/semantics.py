@@ -1,14 +1,21 @@
 # 语义分析
-from st import SymbolTable, IntegerTypeDescriptor, RecordTypeDescriptor, TypeAttribute, VarAttribute, Symbol
+from st import SymbolTable, IntegerTypeDescriptor, 
+                RecordTypeDescriptor, TypeAttribute, VarAttribute, Symbol,
+                BooleanTypeDescriptor
 class TypeCheck:
     def __init__(self, root):
         self.root = root
         self.table = SymbolTable()
+        # self.init()
     
     def init(self):
         desc = IntegerTypeDescriptor()
-        attribute = TypeAttribute(desc)
-        self.table.enter('int',attribute)
+        boolean = BooleanTypeDescriptor()
+        attrint = TypeAttribute(desc)
+        self.table.enter('int',attrint)
+        attrbool = TypeAttribute(boolean)
+        self.table.enter('bool',attrbool)
+
     
     def accept(self):
         self.visit(self.root)
@@ -53,6 +60,12 @@ class TypeCheck:
         self.visit(node.exp)
         self.visit(node.stmt)
     
+    def visitIfStmt(self, node):
+        self.visit(node.exp)
+        self.visit(node.stmt1)
+        if node.stmt2 is not None:
+            self.visit(node.stmt2)
+    
     def visitBlockStmt(self, node):
         self.table.openscope()# 进入作用域
         for stmt in node.stmts:
@@ -62,23 +75,30 @@ class TypeCheck:
     def visitIntType(self ,node):
         typedescriptor = self.table.get('int')
         node.typedescriptor = typedescriptor
+    
+    def visitIdExp(self, node):
+        name = node.name
+        sym = self.table.get(name)
 
     def visitIdType(self, node):
         name = node.name
         sym = self.table.get(name)
         if sym is None or sym.attribute.kind != 'Type':
             print('Type {} is not define'.format(name))
-        node.typedescriptor = sym.attribute.typedescriptor
+        else:
+            node.typedescriptor = sym.attribute.typedescriptor
 
     def visitAssignStmt(self, node):
         name = node.name
         sym = self.table.get(name)
         if sym is None:
             print('{} not define'.format(name))
-        ltype = sym.attribute.typedescriptor
-        # rnode = visit(node.right)
-        if ltype != node.right.typedescriptor:
-            print('assign type ')
+        else:
+            ltype = sym.attribute.typedescriptor
+            # rnode = visit(node.right)
+            self.visit(node.right)
+            if ltype != node.right.typedescriptor:
+                print('assign type ')
     
     def visitPlus(self, node):
         left = self.visit(node.left)
@@ -98,9 +118,11 @@ class TypeCheck:
         if self.table.declaredlocally(name):
             print('duplicate declaration of {}'.format(name))
         # 出错应该怎么处理的问题
-        typedescriptor = node.typenode.typedescriptor
-        attribute = VarAttribute(typedescriptor)
-        self.table.enter(name, attribute)
+        else:
+            self.visit(node.typenode)
+            typedescriptor = node.typenode.typedescriptor
+            attribute = VarAttribute(typedescriptor)
+            self.table.enter(name, attribute)
         #return node 
     
 
@@ -108,11 +130,12 @@ class TypeCheck:
         name = node.name
         if self.table.declaredlocally(name):
             print('duplicate record declaration of {}'.format(name))
-        for field in node.fields:
-            self.visit(field)
-        typedescriptor = RecordTypeDescriptor({field.name:field.typedescriptor for field in node.fields})
-        attribute = TypeAttribute(typedescriptor)
-        self.table.enter(name, attribute)
+        else:
+            for field in node.fields:
+                self.visit(field)
+            typedescriptor = RecordTypeDescriptor({field.name:field.typedescriptor for field in node.fields})
+            attribute = TypeAttribute(typedescriptor)
+            self.table.enter(name, attribute)
     
     def visitRecordField(self, node):
         self.visit(node.typenode)
