@@ -360,6 +360,11 @@ class Parser:
         with open(filename,'w') as f:
             f.write(table)
         # return header+body
+    
+    def dumpjson(self, filename='actions.json'):
+        import json
+        with open(filename,'w') as f:
+            json.dump([self.actions,self.gotos],f)
 
     def parse(self, tokens):
         self.slrparse(self.actions, self.gotos, tokens)

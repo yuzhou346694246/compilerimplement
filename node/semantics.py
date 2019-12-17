@@ -10,6 +10,9 @@ class TypeCheck:
         attribute = TypeAttribute(desc)
         self.table.enter('int',attribute)
     
+    def accept(self):
+        self.visit(self.root)
+
     def visit(self, node):
         method = 'visit' + node.kind
         getattr(self, method)(node)

@@ -1,6 +1,7 @@
 from collections import namedtuple
 from syntaxmap import SyntaxMap
 from parse import Parser
+from semantics import TypeCheck
 from os import path
 import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
@@ -234,8 +235,12 @@ lexer = Lexer('node/test.dm',sm.terminal,t2p)
 # for t in lexer.lex():
 #     print(t)
 
-parser.generate()
+# parser.generate()
+# parser.dumpjson()
+parser.loadjson()
 parser.htmlparse('test.html')
 tokens = list(lexer.lex())
 tree = parser.parse(tokens ,sm.sdmap)
-print(tree)
+# typeCheck = TypeCheck(tree)
+# typeCheck.init()
+# typeCheck.accept()

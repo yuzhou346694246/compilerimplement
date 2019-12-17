@@ -13,6 +13,17 @@ class Symbol:
     def __repr__(self):
         return self.name
 
+class Scope:
+    def __init__(self, up):
+        self.up = up
+        self._scope = []
+
+    def add(self, sym):
+        self._scope.append(sym)
+    
+    def __iter__(self):
+        yield from self._scope
+
 class Attribute:
     def __init__(self, kind, typedescriptor):
         self.kind = kind
@@ -43,10 +54,11 @@ class RecordTypeDescriptor(TypeDescriptor):
 class SymbolTable:
     def __init__(self):
         self.tb = {}
+        self.scope = Scope()
 
     def openscope(self):
         self.depth = self.depth+1
-        self.scope = []
+        self.scope = Scope(self.scope)# 新的作用域要与上个作用域联系起来
     
     def closescope(self):
         self.depth = self.depth - 1
@@ -54,7 +66,8 @@ class SymbolTable:
             prevsym = sym.var
             self.remove(sym)
             if prevsym is not None:
-                self.add(prevsym)
+                self.add(prevsym) # 让被覆盖的符号变得可见
+        self.scope = self.scope.up # 切换到上面一个作用域 
     
     def add(self,sym):
         self.tb[sym.name] = sym

@@ -1,6 +1,7 @@
 
 from collections import deque
-
+import json
+import pickle
 class Parser:
     FIRST = {}
     FOLLOW = {}
@@ -388,6 +389,14 @@ class Parser:
         content = phtml+shtml+table
         with open(filename,'w') as f:
             f.write(content)
+    
+    def dumpjson(self, filename='actions.json'):
+        with open(filename,'w') as f:
+            json.dump([self.actions,self.gotos, self.C],f)
+    
+    def loadjson(self, filename='actions.json'):
+        with open(filename,'r') as f:
+            self.actions,self.gotos, self.C = json.load(f)
     
     def parse(self, tokens, sdmap):
         return self.slrparse(self.actions, self.gotos, tokens, sdmap)
