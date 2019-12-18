@@ -28,7 +28,30 @@ from lalrparse import Parser
 #     '+':10,
 #     '*':11
 # }
+# (0) Stmts->Stmts Stmt
+# (1) Stmts->Stmt
+# (2) Stmt->id = Exp
+# (3) Stmt->if ( Exp ) Stmt else Stmt
+# (4) Stmt->if ( Exp ) Stmt
+# (5) Stmt->while ( Exp ) Stmt
+# (6) Stmt->{ Stmts }
+# (7) Stmt->Type id
+# (8) Stmt->record id { Fields }
+# (9) Fields->Fields , Field
+# (10) Fields->Field
+# (11) Fields->
+# (12) Field->Type id
+# (13) Type->bool
+# (14) Type->int
+# (15) Type->id
 productions = [
+    ['Stmts','Stmts','Stmt'],
+    ['Stmts','Stmt'],
+    ['Stmt','id','=','E'],
+    ['Stmt','if','(','E',')','Stmt'],
+    # ['Stmt','if','(','E',')','Stmt','else','Stmt'],
+    # ['Stmt','while','(','E',')','Stmt'],
+    # ['Stmt','{','Stmts','}'],
     ['E','E','+','E'],
     ['E','E','-','E'],
     ['E','E','*','E'],
@@ -77,8 +100,12 @@ precs = {
     'POSITIVE':['E','+','E']
 }
 
-terminal = ['+','-','*','/','UMINUS','POSITIVE','>','>=','<','<=','!=','==','||','!','&&','id','num']
-nonterminal = ['E']
+terminal = ['=','+','-','*','/','UMINUS','POSITIVE','>','>=','<',\
+        '<=','!=','==','||','!','&&','id','num',\
+        'if','(',')','else',\
+        'while','{','}'
+        ]
+nonterminal = ['E','Stmts','Stmt']
 
 parser = Parser(productions, terminal, nonterminal, precs, precedence, assosiation)
 parser.generate(printInfo=True)

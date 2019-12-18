@@ -1,6 +1,6 @@
 # 语义分析
-from st import SymbolTable, IntegerTypeDescriptor, 
-                RecordTypeDescriptor, TypeAttribute, VarAttribute, Symbol,
+from st import SymbolTable, IntegerTypeDescriptor, \
+                RecordTypeDescriptor, TypeAttribute, VarAttribute, Symbol,\
                 BooleanTypeDescriptor
 class TypeCheck:
     def __init__(self, root):

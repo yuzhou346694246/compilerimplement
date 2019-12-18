@@ -116,6 +116,11 @@ class IntType(TypeNode):# 整数类型节点
         self.kind = 'IntType'
         self.token = token
 
+class BoolType(TypeNode):
+    def __init__(self, token):
+        self.kind = 'BoolType'
+        self.token = token
+
 class IdType(TypeNode):
     def __init__(self, token):
         self.kind = 'IdType'
@@ -209,8 +214,12 @@ def fieldfunc1(typenode, token):
     return RecordField(token, typenode)
 
 @sm.syntaxmap(['Type','int'],[1])
+@sm.syntaxmap(['Type','bool'],[1])
 def typefunc1(token):
-    return IntType(token)
+    if token.kind == 'int':
+        return IntType(token)
+    if token.kind == 'bool':
+        return BoolType(token)
 
 @sm.syntaxmap(['Type','id'],[1])
 def typefunc2(token):
@@ -260,7 +269,7 @@ def exprelfunc(left,op,right):
 @sm.syntaxmap(['Exp','-','Exp'],[1,2])
 def expunaryfunc(op, exp):
     if op.kind == '!':
-        reutrn UnaryOperator('NOT',exp)
+        return UnaryOperator('NOT',exp)
     if op.kind == '-':
         return UnaryOperator('NEG',exp)
 
@@ -277,8 +286,30 @@ def expfunc2(token):
     if token.kind == 'num':
         return ConstInt(token)
 
-parser = Parser(sm.productions, sm.terminal, sm.nonterminal)
+precedence = {# 优先级 
+    '||':7,
+    '&&':7,
+    '!':8,
+    '>=':9,
+    '>':9,
+    '<':9,
+    '<=':9,
+    '==':9,
+    '!=':9,
+    '+':10,
+    '-':10,
+    '*':11,
+    '/':11,
+    'UMINUS':15
+}
 
+precs = {
+    'UMINUS':['Exp','-','Exp']
+}
+
+parser = Parser(sm.productions, sm.terminal, sm.nonterminal,precs,precedence)
+
+Parser.printitems(sm.productions, printno=True)
 # print(sm.terminal)
 t2p = {'id':'[a-zA-Z_]\w*','num':'\d+'}
 lexer = Lexer('node/test2.dm',sm.terminal,t2p)
@@ -289,10 +320,10 @@ lexer = Lexer('node/test2.dm',sm.terminal,t2p)
 
 # parser.generate()
 # parser.dumpjson()
-parser.loadjson()
+# # parser.loadjson()
 # parser.htmlparse('test.html')
-tokens = list(lexer.lex())
-tree = parser.parse(tokens ,sm.sdmap)
-typeCheck = TypeCheck(tree)
-typeCheck.init()
-typeCheck.accept()
+# tokens = list(lexer.lex())
+# tree = parser.parse(tokens ,sm.sdmap)
+# typeCheck = TypeCheck(tree)
+# typeCheck.init()
+# typeCheck.accept()

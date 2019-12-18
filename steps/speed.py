@@ -2,32 +2,10 @@ import sys
 from os import path
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from lalrparse import Parser
-# 消除二义性的表达式文法
-# productions = [
-#     ['RE','E','>','E'],
-#     ['E','E','+','T'],
-#     ['E','T'],
-#     ['T','T','*','F'],
-#     ['T','F'],
-#     ['F','(','E',')'],
-#     ['F','id']
-# ]
-# terminal = ['id','*','+','(',')','>']
-# nonterminal = ['RE','E','T','F']
-
-# productions = [
-#     ['E','E','+','E'],
-#     ['E','E','*','E'],
-#     ['E','id']
-# ]
-
-# terminal = ['+','id','*']
-# nonterminal = ['E']
-
-# precedence = {
-#     '+':10,
-#     '*':11
-# }
+from analysis import calls
+# 使用二义性这种语法，造成分析生成器非常慢
+# 这里要查找原因
+# 在下面的例子中
 productions = [
     ['E','E','+','E'],
     ['E','E','-','E'],
@@ -81,7 +59,10 @@ terminal = ['+','-','*','/','UMINUS','POSITIVE','>','>=','<','<=','!=','==','||'
 nonterminal = ['E']
 
 parser = Parser(productions, terminal, nonterminal, precs, precedence, assosiation)
-parser.generate(printInfo=True)
+# parser.generate(printInfo=True)
+parser.generate()
 parser.dumpjson('lrtables.json')
+parser.htmlparse()
+print(calls)
 tokens = ['-','id','+','id','*','id']
 parser.parse(tokens)

@@ -104,7 +104,7 @@ precs = {
 }
 
 parser = Parser(productions,  terminal, nonterminal,precs, precedence, assosiation)
-parser.generate()
+parser.generate(printInfo=True)
 # parser.generate(printInfo=False)
 tokens = ['id','>','id']
 parser.checkerror()
