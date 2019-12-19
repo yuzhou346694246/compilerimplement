@@ -214,68 +214,68 @@ def fieldfunc1(typenode, token):
     return RecordField(token, typenode)
 
 @sm.syntaxmap(['Type','int'],[1])
-@sm.syntaxmap(['Type','bool'],[1])
+# @sm.syntaxmap(['Type','bool'],[1])
 def typefunc1(token):
     if token.kind == 'int':
         return IntType(token)
-    if token.kind == 'bool':
-        return BoolType(token)
+    # if token.kind == 'bool':
+    #     return BoolType(token)
 
 @sm.syntaxmap(['Type','id'],[1])
 def typefunc2(token):
     return IdType(token)
 
 @sm.syntaxmap(['Exp','Exp','+','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','-','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','*','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','/','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','-','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','*','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','/','Exp'],[1,2,3])
 def expfunc1(left,op,right):
     if op.kind == '+':
         return BinaryOperator('Plus',left,right)
-    if op.kind == '-':
-        return BinaryOperator('Minus',left,right)
-    if op.kind == '*':
-        return BinaryOperator('Multiply',left,right)
-    if op.kind == '/':
-        return BinaryOperator('Divide',left,right)
+    # if op.kind == '-':
+    #     return BinaryOperator('Minus',left,right)
+    # if op.kind == '*':
+    #     return BinaryOperator('Multiply',left,right)
+    # if op.kind == '/':
+    #     return BinaryOperator('Divide',left,right)
 
-@sm.syntaxmap(['Exp','Exp','>','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','<','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','>=','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','<=','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','!=','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','==','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','||','Exp'],[1,2,3])
-@sm.syntaxmap(['Exp','Exp','&&','Exp'],[1,2,3])
-def exprelfunc(left,op,right):
-    if op.kind == '>':
-        return BinaryOperator('GT',left,right)
-    if op.kind == '<':
-        return BinaryOperator('ST',left,right)
-    if op.kind == '>=':
-        return BinaryOperator('GE',left,right)
-    if op.kind == '<=':
-        return BinaryOperator('SE',left,right)
-    if op.kind == '!=':
-        return BinaryOperator('NE',left,right)
-    if op.kind == '==':
-        return BinaryOperator('EQ',left,right)
-    if op.kind == '||':
-        return BinaryOperator('OR',left,right)
-    if op.kind == '&&':
-        return BinaryOperator('AND',left,right)
+# @sm.syntaxmap(['Exp','Exp','>','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','<','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','>=','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','<=','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','!=','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','==','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','||','Exp'],[1,2,3])
+# @sm.syntaxmap(['Exp','Exp','&&','Exp'],[1,2,3])
+# def exprelfunc(left,op,right):
+#     if op.kind == '>':
+#         return BinaryOperator('GT',left,right)
+#     if op.kind == '<':
+#         return BinaryOperator('ST',left,right)
+#     if op.kind == '>=':
+#         return BinaryOperator('GE',left,right)
+#     if op.kind == '<=':
+#         return BinaryOperator('SE',left,right)
+#     if op.kind == '!=':
+#         return BinaryOperator('NE',left,right)
+#     if op.kind == '==':
+#         return BinaryOperator('EQ',left,right)
+#     if op.kind == '||':
+#         return BinaryOperator('OR',left,right)
+#     if op.kind == '&&':
+#         return BinaryOperator('AND',left,right)
 
-@sm.syntaxmap(['Exp','!','Exp'],[1,2])
-@sm.syntaxmap(['Exp','-','Exp'],[1,2])
-def expunaryfunc(op, exp):
-    if op.kind == '!':
-        return UnaryOperator('NOT',exp)
-    if op.kind == '-':
-        return UnaryOperator('NEG',exp)
+# @sm.syntaxmap(['Exp','!','Exp'],[1,2])
+# @sm.syntaxmap(['Exp','-','Exp'],[1,2])
+# def expunaryfunc(op, exp):
+#     if op.kind == '!':
+#         return UnaryOperator('NOT',exp)
+#     if op.kind == '-':
+#         return UnaryOperator('NEG',exp)
 
-@sm.syntaxmap(['Exp','(','Exp',')'],[2])
-def expparentheses(exp):
-    return Parentheses(exp)
+# @sm.syntaxmap(['Exp','(','Exp',')'],[2])
+# def expparentheses(exp):
+#     return Parentheses(exp)
 
 @sm.syntaxmap(['Exp','id'],[1])
 @sm.syntaxmap(['Exp','num'],[1])
@@ -307,7 +307,7 @@ precs = {
     'UMINUS':['Exp','-','Exp']
 }
 
-parser = Parser(sm.productions, sm.terminal, sm.nonterminal,precs,precedence)
+parser = Parser(sm.productions, sm.terminal, sm.nonterminal)#,precs,precedence)
 
 Parser.printitems(sm.productions, printno=True)
 # print(sm.terminal)
@@ -318,10 +318,10 @@ lexer = Lexer('node/test2.dm',sm.terminal,t2p)
 # for t in lexer.lex():
 #     print(t)
 
-# parser.generate()
-# parser.dumpjson()
+parser.generate(printInfo=True)
+parser.dumpjson()
 # # parser.loadjson()
-# parser.htmlparse('test.html')
+parser.htmlparse('test.html')
 # tokens = list(lexer.lex())
 # tree = parser.parse(tokens ,sm.sdmap)
 # typeCheck = TypeCheck(tree)

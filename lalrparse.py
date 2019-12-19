@@ -164,7 +164,7 @@ class Parser:
             C = q.popleft()
             ret.append(C)
             for X in self.nonterminal+self.terminal:
-                g = self.goto(C, X)
+                g = self.goto(C, X) # 此处应该可以优化
                 if len(g) == 0:
                     continue
                 if g in ret:
@@ -389,7 +389,7 @@ class Parser:
             s = s+'<br>'    
             ret.append(n+s)
         return pp.format(''.join(ret))
-        
+
     def htmlparse(self,filename='temp.html'):
         shtml = []
         pformat = '<p>{}</p>'

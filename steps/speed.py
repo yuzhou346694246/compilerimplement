@@ -64,5 +64,5 @@ parser.generate()
 parser.dumpjson('lrtables.json')
 parser.htmlparse()
 print(calls)
-tokens = ['-','id','+','id','*','id']
-parser.parse(tokens)
+# tokens = ['-','id','+','id','*','id']
+# parser.parse(tokens)
