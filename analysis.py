@@ -1,6 +1,9 @@
 from functools import wraps
 from datetime import datetime
 calls = {}
+'''
+这个代码实现了对函数调用次数和运行时间的统计
+'''
 def timer(func):
     @wraps(func)
     def decorator(*args,**kwargs):
