@@ -1,11 +1,12 @@
 # symbol table
 class Symbol:
-    def __init__(self, name, attribute, var=None, level=None, depth=None):
+    def __init__(self, name, attribute, var=None, level=None, depth=None, val=None):
         self.name = name # 标识符名字
         self.attribute = attribute # 关联的信息，类型或者其它
         self.var = var # 同名标识符的上一层次符号
         self.level = level # 
         self.depth = depth
+        self.val = val
     
     def __str__(self):
         return self.name

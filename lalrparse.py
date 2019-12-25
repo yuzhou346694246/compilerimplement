@@ -18,6 +18,10 @@ class Parser:
     def addstart(self):
         p = ['START', self.productions[0][0]]
         self.productions.insert(0,p)
+        tt = self.terminal + self.nonterminal + ['$']
+        self.FIRST = {t:self.first(t) for t in tt}
+        self.productions2items()
+        self._getNT = {t:self.getNT(t) for t in self.nonterminal}
     
     def productions2items(self):
         ret = []
@@ -76,7 +80,8 @@ class Parser:
     def firsts(self, AS):
         ret = set()
         empty = False
-        ff = [self.first(A) for A in AS]
+        # ff = [self.first(A) for A in AS]
+        ff = [self.FIRST[A] for A in AS]
         i = 0
         for f in ff:
             ret.update(f)
@@ -91,6 +96,9 @@ class Parser:
 
     @timer
     def closure(self, I):
+        print('-----------------------')
+        Parser.printitems(I)
+        # print('-----------------------')
         ret = []
         unvisited = []
         unvisited.extend(I)
@@ -106,7 +114,8 @@ class Parser:
                 # if t in visited_nonterminal:
                 #     continue
                 # visited_nonterminal.append(t)
-                nt = self.getNT(t)
+                # nt = self.getNT(t)
+                nt = self._getNT[t]
                 ff = []# first set
                 if item[pos+2] == item[-1]:#beta = empty
                     ff.append(item[-1])
@@ -137,6 +146,8 @@ class Parser:
                 t[pos] = X
                 t[pos+1] = '.'
                 ret.append(t)
+        if ret == []:
+            return []
         return self.closure(ret)
 
     @staticmethod
@@ -346,7 +357,7 @@ class Parser:
     @timer
     def generate(self,printInfo=False):
         self.addstart()#这里是LR扩展文法
-        self.productions2items()
+        # self.productions2items()
         lrC = self.listItems()
         lalrC = self.lr2lalr(lrC)
         C = lalrC#listlalritems()

@@ -2,6 +2,7 @@ from collections import namedtuple
 from syntaxmap import SyntaxMap
 from parse import Parser
 from semantics import TypeCheck
+from interpreter import Interperter
 from os import path
 import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
@@ -13,6 +14,13 @@ class SyntaxNode:
         return self.kind
 
     
+class Program(SyntaxNode):
+    def __init__(self, token, stmts):
+        self.kind = 'Program'
+        self.name = token.text
+        self.token = token
+        self.stmts = stmts
+
 class Stmt(SyntaxNode):
     pass
 
@@ -86,7 +94,24 @@ class IdExp(Exp):
     def __init__(self, token):
         self.kind = 'IdExp'
         self.name = token.text
-        self.token = token    
+        self.token = token 
+
+class CallExp(Exp):
+    def __init__(self, token, aparams):
+        self.kind = 'CallExp'
+        self.token = token
+        self.aparams = aparams 
+
+class AParams(Exp):
+    def __init__(self, aparams):
+        self.kind = 'AParams'
+        self.aparams = aparams
+
+class AParam(Exp):
+    def __init__(self, exp):
+        self.kind = 'AParam'
+        self.exp = exp
+  
 
 class DeclNode(SyntaxNode):
     pass
@@ -157,6 +182,10 @@ Exp  -> Exp + Exp
 Exp  -> id
 Exp  -> num
 '''
+
+@sm.syntaxmap(['Program','id',':','Stmts'],[1,3])
+def programfunc(token,stmts):
+
 
 @sm.syntaxmap(['Stmts','Stmts','Stmt'],[1,2])#
 def stmtsfunc1(stmts, stmt):
@@ -286,6 +315,12 @@ def expfunc2(token):
     if token.kind == 'num':
         return ConstInt(token)
 
+@sm.syntaxmap(['Exp','id','(','AParams',')'],[1,3])
+def expcall(token, aparams):
+    return CallExp(token, aparams)
+
+
+
 precedence = {# 优先级 
     '||':7,
     '&&':7,
@@ -318,12 +353,14 @@ lexer = Lexer('node/test2.dm',sm.terminal,t2p)
 # for t in lexer.lex():
 #     print(t)
 
-parser.generate(printInfo=True)
-parser.dumpjson()
-# # parser.loadjson()
-parser.htmlparse('test.html')
-# tokens = list(lexer.lex())
-# tree = parser.parse(tokens ,sm.sdmap)
+# parser.generate(printInfo=True)
+# parser.dumpjson()
+parser.loadjson()
+# parser.htmlparse('test.html')
+tokens = list(lexer.lex())
+tree = parser.parse(tokens ,sm.sdmap)
 # typeCheck = TypeCheck(tree)
 # typeCheck.init()
 # typeCheck.accept()
+inter = Interperter(tree)
+inter.accept()
