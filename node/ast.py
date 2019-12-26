@@ -38,6 +38,10 @@ class IfStmt(Stmt):
         self.stmt1 = stmt1
         self.stmt2 = stmt2
 
+class PrintStmt(Stmt):
+    def __init__(self,exp):
+        self.kind = 'PrintStmt'
+        self.exp = exp
 
 class WhileStmt(Stmt):
     def __init__(self, exp, stmt):
@@ -101,6 +105,19 @@ class CallExp(Exp):
         self.kind = 'CallExp'
         self.token = token
         self.aparams = aparams 
+
+class Params(SyntaxNode):
+    def __init__(self, params):
+        self.kind = 'Params'
+        self.params = params
+
+class Param(SyntaxNode):
+    def __init__(self, token, typenode):
+        self.kind = 'Param'
+        self.token = token
+        self.name = token.text
+        self.typenode = typenode
+
 
 class AParams(Exp):
     def __init__(self, aparams):
@@ -183,9 +200,9 @@ Exp  -> id
 Exp  -> num
 '''
 
-@sm.syntaxmap(['Program','id',':','Stmts'],[1,3])
-def programfunc(token,stmts):
-
+# @sm.syntaxmap(['Program','program','id',':','{','Stmts','}'],[2,4])
+# def programfunc(token,stmts):
+#     return Program(token,stmts)
 
 @sm.syntaxmap(['Stmts','Stmts','Stmt'],[1,2])#
 def stmtsfunc1(stmts, stmt):
@@ -214,6 +231,10 @@ def stmtfunc4(exp, stmt):
 @sm.syntaxmap(['Stmt','{','Stmts','}'],[2])
 def stmtfunc5(stmts):
     return BlockStmt(stmts)
+
+@sm.syntaxmap(['Stmt','print','Exp'],[2])
+def stmtprint(exp):
+    return PrintStmt(exp)
 
 @sm.syntaxmap(['Stmt','Type','id'],[1,2])
 def stmtfunc6(typenode, token):
@@ -315,9 +336,9 @@ def expfunc2(token):
     if token.kind == 'num':
         return ConstInt(token)
 
-@sm.syntaxmap(['Exp','id','(','AParams',')'],[1,3])
-def expcall(token, aparams):
-    return CallExp(token, aparams)
+# @sm.syntaxmap(['Exp','id','(','AParams',')'],[1,3])
+# def expcall(token, aparams):
+#     return CallExp(token, aparams)
 
 
 
@@ -342,7 +363,7 @@ precs = {
     'UMINUS':['Exp','-','Exp']
 }
 
-parser = Parser(sm.productions, sm.terminal, sm.nonterminal)#,precs,precedence)
+parser = Parser(sm.productions, sm.terminal, sm.nonterminal,precs,precedence)
 
 Parser.printitems(sm.productions, printno=True)
 # print(sm.terminal)
@@ -353,14 +374,14 @@ lexer = Lexer('node/test2.dm',sm.terminal,t2p)
 # for t in lexer.lex():
 #     print(t)
 
-# parser.generate(printInfo=True)
-# parser.dumpjson()
-parser.loadjson()
-# parser.htmlparse('test.html')
+parser.generate(printInfo=True)
+parser.dumpjson()
+# parser.loadjson()
+parser.htmlparse('test.html')
 tokens = list(lexer.lex())
 tree = parser.parse(tokens ,sm.sdmap)
 # typeCheck = TypeCheck(tree)
 # typeCheck.init()
 # typeCheck.accept()
-inter = Interperter(tree)
-inter.accept()
+# inter = Interperter(tree)
+# inter.accept()

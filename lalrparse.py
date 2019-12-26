@@ -96,8 +96,8 @@ class Parser:
 
     @timer
     def closure(self, I):
-        print('-----------------------')
-        Parser.printitems(I)
+        # print('-----------------------')
+        # Parser.printitems(I)
         # print('-----------------------')
         ret = []
         unvisited = []

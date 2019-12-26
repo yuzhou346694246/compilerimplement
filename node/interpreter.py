@@ -100,6 +100,10 @@ class Interperter:
             print('Type {} is not define'.format(name))
         else:
             node.typedescriptor = sym.attribute.typedescriptor
+    
+    def visitPrintStmt(self, node):
+        self.visit(node.exp)
+        print(node.exp.val)
 
     def visitAssignStmt(self, node):
         name = node.name
@@ -113,7 +117,7 @@ class Interperter:
             if ltype != node.right.typedescriptor:
                 print('assign type ')
             else:
-                sym.var = node.right.val
+                sym.val = node.right.val
     
     def visitPlus(self, node):
         left = self.visit(node.left)

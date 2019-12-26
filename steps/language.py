@@ -34,7 +34,7 @@ productions = [
     ['AParam','Exp'],
 
 ]
-terminal = ['id','*','+','(',')','>',';','=','if','else','while','function','number']
+terminal = ['id','*','+','(',')','>',';','=','if','else','while','function','number',',']
 nonterminal = ['Stmts','WhileStmt','Stmt','IfStmt','Exp','RE','E','T','F','Function','Param','Params']
 
 precedence = {# 优先级 
@@ -74,4 +74,4 @@ tokens = ['if','id','>','id','id','=','id',';','else','id','=','id',';']
 # tokens= ['id','=','id',';']
 tokens = ['while','id','>','id','id','=','id',';','if','id','>','id','id','=','id',';','else','id','=','id',';']
 tokens = ['function','id','(',')','while','id','>','id','id','=','id',';','if','id','>','id','id','=','id',';','else','id','=','id',';']
-# parser.parse(tokens)
+parser.parse(tokens)
