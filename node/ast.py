@@ -7,6 +7,7 @@ from os import path
 import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from steps.lex import Lexer
+from analysis import calls
 class SyntaxNode:
     def __str__(self):
         return self.kind
@@ -276,56 +277,56 @@ def typefunc2(token):
     return IdType(token)
 
 @sm.syntaxmap(['Exp','Exp','+','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','-','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','*','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','/','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','-','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','*','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','/','Exp'],[1,2,3])
 def expfunc1(left,op,right):
     if op.kind == '+':
         return BinaryOperator('Plus',left,right)
-    # if op.kind == '-':
-    #     return BinaryOperator('Minus',left,right)
-    # if op.kind == '*':
-    #     return BinaryOperator('Multiply',left,right)
-    # if op.kind == '/':
-    #     return BinaryOperator('Divide',left,right)
+    if op.kind == '-':
+        return BinaryOperator('Minus',left,right)
+    if op.kind == '*':
+        return BinaryOperator('Multiply',left,right)
+    if op.kind == '/':
+        return BinaryOperator('Divide',left,right)
 
-# @sm.syntaxmap(['Exp','Exp','>','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','<','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','>=','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','<=','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','!=','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','==','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','||','Exp'],[1,2,3])
-# @sm.syntaxmap(['Exp','Exp','&&','Exp'],[1,2,3])
-# def exprelfunc(left,op,right):
-#     if op.kind == '>':
-#         return BinaryOperator('GT',left,right)
-#     if op.kind == '<':
-#         return BinaryOperator('ST',left,right)
-#     if op.kind == '>=':
-#         return BinaryOperator('GE',left,right)
-#     if op.kind == '<=':
-#         return BinaryOperator('SE',left,right)
-#     if op.kind == '!=':
-#         return BinaryOperator('NE',left,right)
-#     if op.kind == '==':
-#         return BinaryOperator('EQ',left,right)
-#     if op.kind == '||':
-#         return BinaryOperator('OR',left,right)
-#     if op.kind == '&&':
-#         return BinaryOperator('AND',left,right)
+@sm.syntaxmap(['Exp','Exp','>','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','<','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','>=','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','<=','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','!=','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','==','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','||','Exp'],[1,2,3])
+@sm.syntaxmap(['Exp','Exp','&&','Exp'],[1,2,3])
+def exprelfunc(left,op,right):
+    if op.kind == '>':
+        return BinaryOperator('GT',left,right)
+    if op.kind == '<':
+        return BinaryOperator('ST',left,right)
+    if op.kind == '>=':
+        return BinaryOperator('GE',left,right)
+    if op.kind == '<=':
+        return BinaryOperator('SE',left,right)
+    if op.kind == '!=':
+        return BinaryOperator('NE',left,right)
+    if op.kind == '==':
+        return BinaryOperator('EQ',left,right)
+    if op.kind == '||':
+        return BinaryOperator('OR',left,right)
+    if op.kind == '&&':
+        return BinaryOperator('AND',left,right)
 
-# @sm.syntaxmap(['Exp','!','Exp'],[1,2])
-# @sm.syntaxmap(['Exp','-','Exp'],[1,2])
-# def expunaryfunc(op, exp):
-#     if op.kind == '!':
-#         return UnaryOperator('NOT',exp)
-#     if op.kind == '-':
-#         return UnaryOperator('NEG',exp)
+@sm.syntaxmap(['Exp','!','Exp'],[1,2])
+@sm.syntaxmap(['Exp','-','Exp'],[1,2])
+def expunaryfunc(op, exp):
+    if op.kind == '!':
+        return UnaryOperator('NOT',exp)
+    if op.kind == '-':
+        return UnaryOperator('NEG',exp)
 
-# @sm.syntaxmap(['Exp','(','Exp',')'],[2])
-# def expparentheses(exp):
-#     return Parentheses(exp)
+@sm.syntaxmap(['Exp','(','Exp',')'],[2])
+def expparentheses(exp):
+    return Parentheses(exp)
 
 @sm.syntaxmap(['Exp','id'],[1])
 @sm.syntaxmap(['Exp','num'],[1])
@@ -374,14 +375,15 @@ lexer = Lexer('node/test2.dm',sm.terminal,t2p)
 # for t in lexer.lex():
 #     print(t)
 
-parser.generate(printInfo=True)
+parser.generate()
 parser.dumpjson()
 # parser.loadjson()
 parser.htmlparse('test.html')
 tokens = list(lexer.lex())
-tree = parser.parse(tokens ,sm.sdmap)
+# tree = parser.parse(tokens ,sm.sdmap)
 # typeCheck = TypeCheck(tree)
 # typeCheck.init()
 # typeCheck.accept()
 # inter = Interperter(tree)
 # inter.accept()
+print(calls)

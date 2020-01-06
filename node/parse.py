@@ -2,21 +2,32 @@
 from collections import deque
 import json
 import pickle
+import sys
+from os import path
+sys.path.append(path.join(path.dirname(__file__), '..'))
+from analysis import timer
 class Parser:
     FIRST = {}
     FOLLOW = {}
 
-    def __init__(self, productions,  terminal, nonterminal, precs={},precedence={}, assosiation={}):
+    def __init__(self, productions, terminal, nonterminal,precs={}, precedence={}, assosiation={}):
         self.productions = productions
         self.precs = precs
         self.terminal = terminal
         self.nonterminal = nonterminal
         self.precedence = precedence
         self.assosiation = assosiation
+        self._cacheNT = {}
     
     def addstart(self):
         p = ['START', self.productions[0][0]]
         self.productions.insert(0,p)
+        tt = self.terminal + self.nonterminal + ['$']
+        self.FIRST = {t:self.first(t) for t in tt}
+        self.productions2items()
+        self._getNT = {t:self.getNT(t) for t in self.nonterminal}
+        self._goto = {}
+        self._closure = {}
     
     def productions2items(self):
         ret = []
@@ -27,9 +38,15 @@ class Parser:
                 ret.append(t)
         self.items = ret
 
+    @timer
     def getNT(self,A):
-        return [item for item in self.items if item[0]==A and item[1] == '.']  
+        if A in self._cacheNT:
+            return self._cacheNT[A]
+        ret =  [item for item in self.items if item[0]==A and item[1] == '.']
+        self._cacheNT[A] = ret
+        return ret
     
+    @timer
     def first(self, A):
         if A in self.FIRST:
             return self.FIRST[A]
@@ -65,10 +82,12 @@ class Parser:
             return ret
         return []
 
+    @timer
     def firsts(self, AS):
         ret = set()
         empty = False
-        ff = [self.first(A) for A in AS]
+        # ff = [self.first(A) for A in AS]
+        ff = [self.FIRST[A] for A in AS]
         i = 0
         for f in ff:
             ret.update(f)
@@ -81,10 +100,18 @@ class Parser:
         # 这里没有添加空，是因为我们采用update方法并且没有删除前面集合的空
         return list(ret)
 
+    @timer
     def closure(self, I):
+        # print('-----------------------')
+        # Parser.printitems(I)
+        # print('-----------------------')
+        key = Parser.i2s(I)
+        if key in self._closure:
+            return self._closure[key]
         ret = []
         unvisited = []
         unvisited.extend(I)
+        visited_nonterminal = []
         while len(unvisited) > 0:
             item = unvisited.pop()
             ret.append(item)
@@ -93,7 +120,11 @@ class Parser:
             pos = item.index('.')
             t = item[pos+1]
             if t in self.nonterminal:
-                nt = self.getNT(t)
+                # if t in visited_nonterminal:
+                #     continue
+                # visited_nonterminal.append(t)
+                # nt = self.getNT(t)
+                nt = self._getNT[t]
                 ff = []# first set
                 if item[pos+2] == item[-1]:#beta = empty
                     ff.append(item[-1])
@@ -110,9 +141,24 @@ class Parser:
                     if ni in unvisited:
                         continue
                     unvisited.append(ni)
+        self._closure[key] = ret
         return ret 
     
+    @staticmethod
+    def i2s(I):
+        s = sorted([''.join(i) for i in I])
+        return ''.join(s)
+
+    @timer
     def goto(self, I,X):
+        key = Parser.i2s(I)
+        trans = {}
+        if key in self._goto:
+            trans = self._goto[key]
+            if X in trans:
+                return trans[X]
+        else:
+            self._goto[key] = trans
         ret = []
         for item in I:
             if item[-2] == '.':
@@ -123,7 +169,11 @@ class Parser:
                 t[pos] = X
                 t[pos+1] = '.'
                 ret.append(t)
-        return self.closure(ret)
+        if ret == []:
+            return []
+        ret = self.closure(ret)
+        trans[X] = ret
+        return ret
 
     @staticmethod
     def printitems(I,printno=False):
@@ -136,18 +186,7 @@ class Parser:
             else:
                 print(s)
 
-    @staticmethod
-    def htmlitems(I):
-        ret = []
-        pp = '<p>{}</p>'
-        for i,item in enumerate(I):
-            s = ' '.join(item[1:])
-            n = '({}) '.format(i)
-            s = '{}->{}'.format(item[0],s)
-            s = s+'<br>'    
-            ret.append(n+s)
-        return pp.format(''.join(ret))
-
+    @timer
     def listItems(self):
         ret = []
         # C = closure([items[0]])
@@ -161,7 +200,7 @@ class Parser:
             C = q.popleft()
             ret.append(C)
             for X in self.nonterminal+self.terminal:
-                g = self.goto(C, X)
+                g = self.goto(C, X) # 此处应该可以优化
                 if len(g) == 0:
                     continue
                 if g in ret:
@@ -169,6 +208,7 @@ class Parser:
                 q.append(g)
         return ret
     
+    @timer
     def lalrgen(self,C):
         actions = {}
         gotos = {}
@@ -186,7 +226,7 @@ class Parser:
                     if len(ps) == 0:# 如果没有reduce的项目，那肯定直接返回
                         continue
                     lf = [item[-1] for item in ps]
-                    if a in lf:# 只有a在reduce 终结符里面才会reduce
+                    if a in lf:
                         # ps = [item[:-2] for item in itemlist if item[-1] == a]
                         ps = [p[:-2] for p in ps if p[-1] == a]
                         indexs = [str(self.productions.index(p)) for p in ps]
@@ -210,18 +250,34 @@ class Parser:
                     ps = [item[:-2] for item in itemlist if item[-2]=='.' and item[-1]==a]
                     indexs = [str(self.productions.index(p)) for p in ps]
                     r = ''
+                    # 这里之所以认为发生了冲突，是因为在我们的items发现了在当前终结符下可以进行规约
+                    # 比如 (1)E-> E+E. + (2) E->E.+E x
+                    # 或者 (1)if E Stmt . else (2) if E Stmt .else Stmt x
+                    # 上面的x代表规约字符
+                    # 针对第一种情况，我们采用优先级的方法来处理
+                    # 针对第二种情况，我们采用最长匹配原则
                     if len(indexs) > 0:# 发生了reduce/shift conflict
                         r = '||r'+'|'.join(indexs)
                         # 针对 else 这种情况，那么要reduce的产生式，就是shift产生式的开头一部分
                         # 这里假设ps只有一个元素
+                        # 第一种 情况处理
                         lps = [p for p in self.productions if len(p) > len(ps[0])]
                         test = [ps[0] == p[:len(ps[0])] for p in lps]
+                        # 选择最长匹配
                         if True in test:
                             action[a] = 's'+str(i)
                             continue
                         p = ps[0]
-                        p = p[::-1]
+                        p = p[::-1] ## ？
                         prec = 0
+                        # 上面谈到了else的shift-reduce冲突问题，采取最长匹配原则
+                        # 但是当面对 1+1.+1 这种情况我们是应该规约E->E+E呢，还是
+                        # 继续输入后面的token
+                        # 这里采用的原则是，如果接下来的操作符优先级大于当前优先级，那么就shift
+                        # 否则规约
+                        # 例如 1+1.*2 当面对这种*的优先级大于+，所以要shift
+                        # 但是这里还有别的情况，比如负数-E
+                        # - 在这个地方不是减法的意思，而是负号
                         for t in p:
                             if t in self.terminal:
                                 for k,v in self.precs.items():# 如果语法中，对于某条语法定义了一个优先级，那么要先提取这个优先级
@@ -255,11 +311,28 @@ class Parser:
             gotos[state] = trans
         return actions, gotos
 
+    @timer
     def lr2lalr(self, C):
         slr = []
+        # for itemlist in C:
+        #     slr.append([item[:-1] for item in itemlist])
         for itemlist in C:
-            slr.append([item[:-1] for item in itemlist])
-        indexs = {i:slr.index(s) for i,s in enumerate(slr)}
+            tt = [item[:-1] for item in itemlist]
+            ntt = []
+            for t in tt:
+                if t not in ntt:
+                    ntt.append(t)
+            slr.append(ntt)
+        self.slr = slr
+        numslr = []
+        for ss in slr:
+            vals = sorted([''.join(s) for s in ss])
+            numslr.append(vals)
+            
+        # indexs = {i:slr.index(s) for i,s in enumerate(slr)}
+        indexs = {i:numslr.index(s) for i,s in enumerate(numslr)}
+        # for i,s in enumerate(slr):
+
         ret = {}
         for k,v in indexs.items():
             if v in ret:
@@ -272,9 +345,22 @@ class Parser:
                 ret[v] = C[k]
         return list(ret.values())
     
+    def lr2larlrN(self, C):
+        slr = []
+        for itemlist in C:
+            tt = [item[:-1] for item in itemlist]
+            ntt = []
+            for t in tt:
+                if t not in ntt:
+                    ntt.append(t)
+            slr.append(ntt)
+        for ss in slr:
+            t = sorted([hash(s) for s in ss])
+
     '''
     这个版本的分析器能接受语法动作
     '''
+    @timer
     def slrparse(self, actions, gotos, tokens, sdmap):
         pos = 0
         states = [0]
@@ -325,13 +411,21 @@ class Parser:
             else:
                 print('ERROR')
                 break
-    
+
+    def checkerror(self):
+        for state,action in self.actions.items():
+            for k,v in action.items():
+                if v == 'r':
+                    print('Reduce undefined:State:{},Token:{}'.format(state,k))
+
+    @timer
     def generate(self,printInfo=False):
         self.addstart()#这里是LR扩展文法
-        self.productions2items()
+        # self.productions2items()
         lrC = self.listItems()
         lalrC = self.lr2lalr(lrC)
         C = lalrC#listlalritems()
+        self.lalritems = C
         self.C = C
         if printInfo:
             print('---------------------------------')
@@ -350,7 +444,7 @@ class Parser:
         if printInfo:
             header = ''.join(['{:8}'.format(s) for s in ['state']+self.terminal+['$']+self.nonterminal])
             print(header)
-            for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
+            for (k,v),(k1,v1) in zip(self.actions.items(), self.gotos.items()):
                 s = '{:8}'.format(str(k))
                 t = ''.join(['{:8}'.format(str(v.get(i,''))) for i in self.terminal+['$']])
                 n = ''.join(['{:8}'.format(str(v1.get(i,''))) for i in self.nonterminal])
@@ -359,6 +453,18 @@ class Parser:
                 print(sp)
                 print(p)
     
+    @staticmethod
+    def htmlitems(I):
+        ret = []
+        pp = '<p>{}</p>'
+        for i,item in enumerate(I):
+            s = ' '.join(item[1:])
+            n = '({}) '.format(i)
+            s = '{}->{}'.format(item[0],s)
+            s = s+'<br>'    
+            ret.append(n+s)
+        return pp.format(''.join(ret))
+
     def htmlparse(self,filename='temp.html'):
         shtml = []
         pformat = '<p>{}</p>'
@@ -399,7 +505,8 @@ class Parser:
             self.actions,self.gotos, self.C, self.productions = json.load(f)
         self.actions = {int(k):v for k,v in self.actions.items()}
         self.gotos = {int(k):v for k,v in self.gotos.items()}
-        
+
     def parse(self, tokens, sdmap):
         return self.slrparse(self.actions, self.gotos, tokens, sdmap)
+
 

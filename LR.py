@@ -34,16 +34,16 @@
 ## D-> c.
 ## SLR无法确定应该用哪个产生式进行归约
 from collections import deque
-productions = [
-    ['E','E','+','T'],
-    ['E','T'],
-    ['T','T','*','F'],
-    ['T','F'],
-    ['F','(','E',')'],
-    ['F','id']
-]
-terminal = ['id','*','+','(',')']
-nonterminal = ['E','T','F']
+# productions = [
+#     ['E','E','+','T'],
+#     ['E','T'],
+#     ['T','T','*','F'],
+#     ['T','F'],
+#     ['F','(','E',')'],
+#     ['F','id']
+# ]
+# terminal = ['id','*','+','(',')']
+# nonterminal = ['E','T','F']
 
 # productions = [
 #     ['E','E','+','E'],
@@ -68,6 +68,29 @@ nonterminal = ['E','T','F']
 # ]
 # terminal = ['(','id','+','*',')']
 # nonterminal = ['E']
+productions = [
+    ['E','E','+','E'],
+    ['E','E','-','E'],
+    ['E','E','*','E'],
+    ['E','E','/','E'],
+    ['E','E','==','E'],
+    ['E','E','!=','E'],
+    ['E','E','>','E'],
+    ['E','E','>=','E'],
+    ['E','E','<=','E'],
+    ['E','E','<','E'],
+    ['E','E','||','E'],
+    ['E','E','&&','E'],
+    ['E','!','E'],
+    ['E','-','E'],
+    ['E','+','E'],
+    ['E','num'],
+    ['E','id']
+]
+terminal = ['+','-','*','/','UMINUS','POSITIVE','>','>=','<','<=','!=','==','||','!','&&','id','num']
+nonterminal = ['E']
+
+
 
 # productions = [
 #     ['E','E','+','E'],
@@ -173,8 +196,11 @@ def getNT(A):
     return [item for item in items if item[0]==A and item[1] == '.']
 
 
-
+_closure = {}
 def closure(I):
+    key = i2s(I)
+    if key in _closure:
+        return _closure[key]
     ret = []
     unvisited = []
     unvisited.extend(I)
@@ -203,6 +229,7 @@ def closure(I):
                 if ni in unvisited:
                     continue
                 unvisited.append(ni)
+    _closure[key] = ret
     return ret     
 
     # for item in I:#item = ['E','E','.','+','T',$]
@@ -233,7 +260,21 @@ def closure(I):
     # visited.clear()
     # return ret
 
+def i2s(I):
+        s = sorted([''.join(i) for i in I])
+        return ''.join(s)
+
+_goto ={}
 def goto(I,X):
+    key = i2s(I)
+    trans = {}
+    if key in _goto:
+        trans = _goto[key]
+        if X in trans:
+            return trans[X]
+    else:
+        _goto[key] = trans
+
     ret = []
     for item in I:
         if item[-2] == '.':
@@ -245,7 +286,10 @@ def goto(I,X):
             t[pos+1] = '.'
             ret.append(t)
 
-    return closure(ret)
+    # return closure(ret)
+    ret = closure(ret)
+    trans[X] = ret
+    return ret
 
 def printitems(I,printno=False):
     for i,item in enumerate(I):
@@ -432,8 +476,8 @@ for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
     print(p)
 
 # ####
-# print('---------------------parse---------------------------')
-# slrparse(actions, gotos, ['id','+','id'])
+print('---------------------parse---------------------------')
+slrparse(actions, gotos, ['id','+','id','+','id'])
 
 ## SLR存在的问题
 ## S-> L=R

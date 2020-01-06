@@ -1,4 +1,3 @@
-program part1:   
     int a
     int b
     a = 1

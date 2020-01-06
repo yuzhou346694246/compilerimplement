@@ -12,17 +12,23 @@
 #     'F':[['(','E',')'],['id']]
 # }
 
+# productions = [
+#     ['E','E','+','T'],
+#     ['E','T'],
+#     ['T','T','*','F'],
+#     ['T','F'],
+#     ['F','(','E',')'],
+#     ['F','id']
+# ]
+# terminal = ['id','*','+','(',')']
+# nonterminal = ['E','T','F']
 productions = [
-    ['E','E','+','T'],
-    ['E','T'],
-    ['T','T','*','F'],
-    ['T','F'],
-    ['F','(','E',')'],
-    ['F','id']
+    ['E','E','+','E'],
+    ['E','E','-','E']
 ]
+terminal = ['+','-']
+nonterminal = ['E']
 
-terminal = ['id','*','+','(',')']
-nonterminal = ['E','T','F']
 def prehandle():
     p = ['START',productions[0][0]]
     productions.insert(0,p)
@@ -86,7 +92,6 @@ def goto(I,X):
             t[pos] = X
             t[pos+1] = '.'
             ret.append(t)
-
     return closure(ret)
 
 def I2N(I):
@@ -252,22 +257,20 @@ for i,c in enumerate(C):
     print('---------------------------------')
 print('*********************************')
 printitems(productions,printno=True)
-# for t in nonterminal:
-#     print("{}:{}".format(t,follow(t)))
-print('*********************************')
-actions, gotos = slrgen(C)
-header = ''.join(['{:10}'.format(s) for s in ['state']+terminal+['$']+nonterminal])
-print(header)
-for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
-    s = '{:10}'.format(str(k))
-    t = ''.join(['{:10}'.format(str(v.get(i,''))) for i in terminal+['$']])
-    n = ''.join(['{:10}'.format(str(v1.get(i,''))) for i in nonterminal])
-    p = s+t+n
-    sp = ''.join(['-' for i in range(len(p))])
-    print(sp)
-    print(p)
 
-####
-print('---------------------parse---------------------------')
-slrparse(actions, gotos, ['id','+','id'])
+print('*********************************')
+# actions, gotos = slrgen(C)
+# header = ''.join(['{:10}'.format(s) for s in ['state']+terminal+['$']+nonterminal])
+# print(header)
+# for (k,v),(k1,v1) in zip(actions.items(), gotos.items()):
+#     s = '{:10}'.format(str(k))
+#     t = ''.join(['{:10}'.format(str(v.get(i,''))) for i in terminal+['$']])
+#     n = ''.join(['{:10}'.format(str(v1.get(i,''))) for i in nonterminal])
+#     p = s+t+n
+#     sp = ''.join(['-' for i in range(len(p))])
+#     print(sp)
+#     print(p)
+
+# print('---------------------parse---------------------------')
+# slrparse(actions, gotos, ['id','+','id'])
 

@@ -2,6 +2,7 @@ import sys
 from os import path
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from lalrparse import Parser
+from analysis import calls
 
 #http://www.cs.tufts.edu/~sguyer/classes/comp181-2006/minijava.html
 productions = [
@@ -106,8 +107,8 @@ precs = {
 }
 
 parser = Parser(productions,  terminal, nonterminal,precs, precedence, assosiation)
-parser.generate(printInfo=True)
-# parser.generate(printInfo=False)
+# parser.generate(printInfo=True)
+parser.generate(printInfo=False)
 tokens = ['id','>','id']
 parser.checkerror()
 # parser.parse(tokens)
@@ -116,3 +117,4 @@ function hello()
     if 
 '''
 parser.htmlparse()
+print(calls)
