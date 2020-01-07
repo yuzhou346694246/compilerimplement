@@ -213,7 +213,7 @@ def stmtsfunc1(stmts, stmt):
 def stmtsfunc2(stmt):
     return Stmts(None, stmt)
 
-@sm.syntaxmap(['Stmt','id','=','Exp'],[1,3])
+@sm.syntaxmap(['Stmt','id','=','Exp',';'],[1,3])
 def stmtfunc1(token, right):
     return AssignStmt(token, right)
 

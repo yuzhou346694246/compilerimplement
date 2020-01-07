@@ -68,7 +68,9 @@ productions = [
     ['Expression','(','Expression',')']
 ]
 terminal = ['class', 'id', '{', 'public', 'static', 'void', 'main', '(', '[', ']', ')', '}', ';', 
-            'extends', 'int', 'boolean', 'if', 'else', 'while', '=', 'num','System.out.println']
+            'extends', 'int', 'boolean', 'if', 'else', 'while', '=', 'num','System.out.println',
+            '+','-','*','/','>','>=','<','<=','!=','==','.','&&','||','length'
+            ]
 nonterminal = ['Program', 'ClassDeclarations', 'MainClass', 'ClassDeclaration', 
                 'VarDeclarations', 'VarDeclaration', 'Extend', 'MethodDeclarations', 
                 'MethodDeclaration', 'ParamsDefinition', 'ParamsDefinitions', 

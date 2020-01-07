@@ -45,11 +45,12 @@ class Lexer:
                 yield Token('*',pos,'*')
                 pos=pos+1
             if line[pos] == '/':
-                yield '/'
+                # yield '/'
                 yield Token('/',pos,'/')
                 pos=pos+1
             if pos >= length:
                 yield Token('$',-1,'')
                 return
+
 
 
