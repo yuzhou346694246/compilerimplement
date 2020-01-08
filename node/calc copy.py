@@ -79,6 +79,10 @@ def comparefunc(left,op,right):
 def numfunc(token):
     return token.val
 
+@sm.syntaxmap(['E','-','E'],[2])
+def negexp(exp):
+    return -exp
+
 precedence = {
     '||':5,
     '&&':5,
@@ -91,14 +95,19 @@ precedence = {
     '+':7,
     '-':7,
     '*':8,
-    '/':8
+    '/':8,
+    'UMINUS':9
 }
-tokens = list(Lexer('1+10*123').lex())
+tokens = list(Lexer('1+-10*123').lex())
+precs = {
+    'UMINUS':['E','-','E'],
+    'POSITIVE':['E','+','E']
+}
 # for t in tokens:
 #     print(t)
 # print(sm.productions())
 # parser = Parser(productions, terminal, nonterminal)
-parser = Parser(sm.productions, sm.terminal, sm.nonterminal, precedence=precedence)
-parser.generate(printInfo=True)
+parser = Parser(sm.productions, sm.terminal, sm.nonterminal, precedence=precedence, precs=precs)
+parser.generate()
 parser.parse(tokens, sm.sdmap)
 print(calls)
