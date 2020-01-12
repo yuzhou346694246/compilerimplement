@@ -1,10 +1,14 @@
-import sys
+from collections import namedtuple
+from syntaxmap import SyntaxMap
+from parse import Parser
+from semantics import TypeCheck
+from interpreter import Interperter
 from os import path
+import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
-from lalrparse import Parser
+from steps.lex import Lexer
 from analysis import calls
-##
-## 这里的语句中我们使用分号作为语句分隔符，相对于不适用语句分隔符，速度差10秒，前者10s，后者需要20s。
+
 productions = [
     ['Stmts','Stmts','Stmt'],
     ['Stmts'],
