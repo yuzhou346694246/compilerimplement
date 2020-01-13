@@ -67,7 +67,7 @@ class SyntaxMap:
         
         for p in self._productions:
             for t in p[1:]:
-                if t not in nont:
+                if t not in nont and t not in tt:
                     tt.append(t)
 
         # for p in self._productions:

@@ -3,6 +3,7 @@ from syntaxmap import SyntaxMap
 from parse import Parser
 from semantics import TypeCheck
 from interpreter import Interperter
+from collections import Counter
 from os import path
 import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
@@ -41,14 +42,14 @@ productions = [
     ['E','E','&&','E'],
     ['E','!','E'],
     ['E','-','E'],
-    ['E','+','E'],
+    # ['E','+','E'],
     ['E','(','E',')'],
     ['E','num'],
     ['E','id']
 ]
 
 # terminal = ['=','{','}','(',')',';']
-terminal = ['while','else','=','{','}','(',')','+','-','*','/','UMINUS','POSITIVE','>','>=','<','<=','!=','==','||','!','&&','id','num',';']
+terminal = ['while','if','int','print',',','else','=','{','}','(',')','+','-','*','/','UMINUS','POSITIVE','>','>=','<','<=','!=','==','||','!','&&','id','num',';']
 nonterminal = ['Stmts','Stmt','E']
 precedence = {# 优先级 
     '||':7,
@@ -81,4 +82,9 @@ precs = {
 }
 parser = Parser(productions, terminal, nonterminal, precs, precedence, assosiation)
 parser.generate()
+Parser.printitems(productions, printno=True)
+cnt = Counter([p[0] for p in productions])
+print(cnt)
 print(calls)
+print(sorted(terminal))
+print(len(terminal))

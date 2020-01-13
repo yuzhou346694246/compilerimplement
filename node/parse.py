@@ -457,9 +457,11 @@ class Parser:
     def htmlitems(I):
         ret = []
         pp = '<p>{}</p>'
+        aname = '<a name="p{0}">({0})</a>'
         for i,item in enumerate(I):
             s = ' '.join(item[1:])
-            n = '({}) '.format(i)
+            # n = '({}) '.format(i)
+            n = aname.format(i)
             s = '{}->{}'.format(item[0],s)
             s = s+'<br>'    
             ret.append(n+s)
@@ -468,22 +470,42 @@ class Parser:
     def htmlparse(self,filename='temp.html'):
         shtml = []
         pformat = '<p>{}</p>'
+        aname = '<a name="{0}">{0}</a><br>'
         for i,c in enumerate(self.C):
-            i = str(i)+'<br>'
+            # i = str(i)+'<br>'
+            i = aname.format(i)
             h = Parser.htmlitems(c)
             shtml.append(i+h)
         shtml = pformat.format(''.join(shtml))
 
         phtml = Parser.htmlitems(self.productions)
 
+        def convert(ac):
+            shref = '<a href="#{0}">s{0}</a>'
+            rhref = '<a href="#p{0}">r{0}</a>'
+            ghref = '<a href="#{0}">{0}</a>'
+            if ac == "":
+                return ""
+            if ac[0] == 's':
+                s = ac[1:]
+                return shref.format(s)
+            elif ac[0] == 'r':
+                r = ac[1:]
+                return rhref.format(r)
+            return ghref.format(ac)
+
         header = ['state']+self.terminal+['$']+self.nonterminal
         body = []
         formatstr = '<td>{}</td>'
+        ahref = '<a href="#{0}">{0}</a>'
         header = ''.join([formatstr.format(i) for i in header])
         for (k,v),(k1,v1) in zip(self.actions.items(), self.gotos.items()):
-                s = [str(k)]
-                t = [str(v.get(i,'')) for i in self.terminal+['$']]
-                n = [str(v1.get(i,'')) for i in self.nonterminal]
+                # s = [str(k)]
+                s = [ahref.format(k)]
+                # t = [str(v.get(i,'')) for i in self.terminal+['$']]
+                t = [convert(v.get(i,'')) for i in self.terminal+['$']]
+                # n = [str(v1.get(i,'')) for i in self.nonterminal]
+                n = [convert(v1.get(i,'')) for i in self.nonterminal]
                 p = s+t+n
                 body.append(''.join([formatstr.format(i) for i in p]))
         formatline = '<tr>{}</tr>'

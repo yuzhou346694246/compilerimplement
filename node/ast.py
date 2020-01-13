@@ -4,6 +4,7 @@ from parse import Parser
 from semantics import TypeCheck
 from interpreter import Interperter
 from os import path
+from collections import Counter
 import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from steps.lex import Lexer
@@ -20,6 +21,15 @@ class Program(SyntaxNode):
         self.kind = 'Program'
         self.name = token.text
         self.token = token
+        self.stmts = stmts
+
+class Function(SyntaxNode):
+    def __init__(self, token,params,rettype, stmts):
+        self.kind = 'Function'
+        self.name = token.text
+        self.token = token
+        self.params = params
+        self.rettype = rettype
         self.stmts = stmts
 
 class Stmt(SyntaxNode):
@@ -62,7 +72,8 @@ class Stmts(Stmt):
             self.stmts = []
         else:
             self.stmts = stmts.stmts
-        self.stmts.append(stmt)
+        if stmt is not None:
+            self.stmts.append(stmt)
     
 #     def __str__(self):
 #         return 'Stmts'
@@ -108,9 +119,14 @@ class CallExp(Exp):
         self.aparams = aparams 
 
 class Params(SyntaxNode):
-    def __init__(self, params):
+    def __init__(self, params,param):
         self.kind = 'Params'
-        self.params = params
+        if params is None:
+            self.params = []
+        else:
+            self.params = params.params
+        if param is not None:
+            self.params.append(param)
 
 class Param(SyntaxNode):
     def __init__(self, token, typenode):
@@ -121,9 +137,15 @@ class Param(SyntaxNode):
 
 
 class AParams(Exp):
-    def __init__(self, aparams):
+    def __init__(self, aparams, aparam):
         self.kind = 'AParams'
-        self.aparams = aparams
+        if aparams is None:
+            self.aparams = []
+        else:
+            self.aparams = self.aparams
+        if aparam is not None:
+            self.aparams.append(aparam)
+
 
 class AParam(Exp):
     def __init__(self, exp):
@@ -201,9 +223,29 @@ Exp  -> id
 Exp  -> num
 '''
 
-# @sm.syntaxmap(['Program','program','id',':','{','Stmts','}'],[2,4])
-# def programfunc(token,stmts):
-#     return Program(token,stmts)
+@sm.syntaxmap(['Program','program','id',':','{','Stmts','}'],[2,4])
+def programfunc(token,stmts):
+    return Program(token,stmts)
+
+@sm.syntaxmap(['Function','function','id',':','Type','(','Params',')','{','Stmts','}'],[2,4,6,9])
+def functionfunc(token, params, rettype, stmts):
+    return Function(token,params, rettype, stmts)
+
+@sm.syntaxmap(['Params','Params',',','Param'],[1,3])
+def paramsfunc1(params,param):
+    return Params(params, param)
+
+@sm.syntaxmap(['Params','Param'],[1])
+def paramsfunc2(param):
+    return Params(None, param)
+
+@sm.syntaxmap(['Params'])
+def paramsempty():
+    return None
+
+@sm.syntaxmap(['Param','Type','id'],[1,2])
+def paramfunc(typenode, token):
+    return Param(token, typenode)
 
 @sm.syntaxmap(['Stmts','Stmts','Stmt'],[1,2])#
 def stmtsfunc1(stmts, stmt):
@@ -213,9 +255,17 @@ def stmtsfunc1(stmts, stmt):
 def stmtsfunc2(stmt):
     return Stmts(None, stmt)
 
+@sm.syntaxmap(['Stmts'])
+def stmtsempty():
+    return None
+
 @sm.syntaxmap(['Stmt','id','=','Exp',';'],[1,3])
 def stmtfunc1(token, right):
     return AssignStmt(token, right)
+
+@sm.syntaxmap(['Stmt','Function'],[1])
+def stmtfundef(fundecl):
+    return fundecl
 
 @sm.syntaxmap(['Stmt','if','(','Exp',')','Stmt','else','Stmt'],[3,5,7])
 def stmtfunc2(exp, stmt1, stmt2):
@@ -233,11 +283,11 @@ def stmtfunc4(exp, stmt):
 def stmtfunc5(stmts):
     return BlockStmt(stmts)
 
-@sm.syntaxmap(['Stmt','print','Exp'],[2])
+@sm.syntaxmap(['Stmt','print','Exp',';'],[2])
 def stmtprint(exp):
     return PrintStmt(exp)
 
-@sm.syntaxmap(['Stmt','Type','id'],[1,2])
+@sm.syntaxmap(['Stmt','Type','id',';'],[1,2])
 def stmtfunc6(typenode, token):
     #idnode = SingleNode('id', token)
     return DeclVar(token,typenode)
@@ -337,11 +387,25 @@ def expfunc2(token):
     if token.kind == 'num':
         return ConstInt(token)
 
-# @sm.syntaxmap(['Exp','id','(','AParams',')'],[1,3])
-# def expcall(token, aparams):
-#     return CallExp(token, aparams)
+@sm.syntaxmap(['Exp','id','(','AParams',')'],[1,3])
+def expcall(token, aparams):
+    return CallExp(token, aparams)
 
+@sm.syntaxmap(['AParams','AParams',',','AParam'],[1,3])
+def aparamsfunc1(aparams, aparam):
+    return AParams(aparams, aparam)
 
+@sm.syntaxmap(['AParams','AParam'],[1])
+def aparamsfunc2(aparam):
+    return AParams(None, aparam)
+
+@sm.syntaxmap(['AParams'])
+def aparamsempty():
+    return None
+
+@sm.syntaxmap(['AParam','Exp'],[1])
+def aparam(exp):
+    return AParam(exp)
 
 precedence = {# 优先级 
     '||':7,
@@ -364,12 +428,15 @@ precs = {
     'UMINUS':['Exp','-','Exp']
 }
 
+
+
+
 parser = Parser(sm.productions, sm.terminal, sm.nonterminal,precs,precedence)
 
-Parser.printitems(sm.productions, printno=True)
+
 # print(sm.terminal)
 t2p = {'id':'[a-zA-Z_]\w*','num':'\d+'}
-lexer = Lexer('node/test2.dm',sm.terminal,t2p)
+# lexer = Lexer('node/test2.dm',sm.terminal,t2p)
 # lexer = Lexer('test2.dm',sm.terminal,t2p)
 # print(list(lexer.lex()))
 # for t in lexer.lex():
@@ -379,11 +446,15 @@ parser.generate()
 parser.dumpjson()
 # parser.loadjson()
 parser.htmlparse('test.html')
-tokens = list(lexer.lex())
+# tokens = list(lexer.lex())
 # tree = parser.parse(tokens ,sm.sdmap)
 # typeCheck = TypeCheck(tree)
 # typeCheck.init()
 # typeCheck.accept()
 # inter = Interperter(tree)
 # inter.accept()
+# Parser.printitems(sm.productions, printno=True)
+# cnt = Counter([p[0] for p in sm.productions])
+# print(cnt)
 print(calls)
+
