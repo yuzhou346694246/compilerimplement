@@ -484,6 +484,7 @@ class Parser:
             shref = '<a href="#{0}">s{0}</a>'
             rhref = '<a href="#p{0}">r{0}</a>'
             ghref = '<a href="#{0}">{0}</a>'
+            ac = str(ac)
             if ac == "":
                 return ""
             if ac[0] == 's':

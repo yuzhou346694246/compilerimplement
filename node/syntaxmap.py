@@ -25,7 +25,7 @@ class SyntaxMap:
     def __init__(self):
         self.sdmap = []
 
-    def syntaxmap(self, grammar, params):
+    def syntaxmap(self, grammar, params=[]):
         def decorator(f):
             self.sdmap.append([grammar, params,f])
             @wraps(f)

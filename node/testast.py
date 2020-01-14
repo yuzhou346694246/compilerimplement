@@ -82,8 +82,10 @@ precs = {
 }
 parser = Parser(productions, terminal, nonterminal, precs, precedence, assosiation)
 parser.generate()
-Parser.printitems(productions, printno=True)
-cnt = Counter([p[0] for p in productions])
+parser.htmlparse('test.html')
+# Parser.printitems(productions, printno=True)
+# cnt = Counter([p[0] for p in productions])
+parser.htmlparse('test.html')
 print(cnt)
 print(calls)
 print(sorted(terminal))

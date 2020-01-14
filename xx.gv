@@ -1,0 +1,6 @@
+// The Round Table
+digraph {
+	A [label=Qu]
+	B [label=Zhu]
+	A -> B [constraint=false]
+}

@@ -9,6 +9,7 @@ import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from steps.lex import Lexer
 from analysis import calls
+from visitor import AstPrintVisitor
 class SyntaxNode:
     def __str__(self):
         return self.kind
@@ -17,10 +18,15 @@ class SyntaxNode:
 
     
 class Program(SyntaxNode):
-    def __init__(self, token, stmts):
+    def __init__(self, token, block):
         self.kind = 'Program'
         self.name = token.text
         self.token = token
+        self.block = block
+
+class Block(SyntaxNode):
+    def __init__(self, stmts):
+        self.kind = 'Block'
         self.stmts = stmts
 
 class Function(SyntaxNode):
@@ -60,10 +66,10 @@ class WhileStmt(Stmt):
         self.exp = exp
         self.stmt = stmt
 
-class BlockStmt(Stmt):
-    def __init__(self, stmts):
-        self.kind = 'BlockStmt'
-        self.stmts = stmts
+# class BlockStmt(Stmt):
+#     def __init__(self, stmts):
+#         self.kind = 'BlockStmt'
+#         self.stmts = stmts
 
 class Stmts(Stmt):
     def __init__(self, stmts, stmt):
@@ -223,9 +229,14 @@ Exp  -> id
 Exp  -> num
 '''
 
-@sm.syntaxmap(['Program','program','id',':','{','Stmts','}'],[2,4])
-def programfunc(token,stmts):
-    return Program(token,stmts)
+@sm.syntaxmap(['Program','program','id',':','Block'],[2,4])
+def programfunc(token,block):
+    return Program(token,block)
+
+@sm.syntaxmap(['Block','{','Stmts','}'],[2])
+def blockfunc(stmts):
+    return Block(stmts)
+    
 
 @sm.syntaxmap(['Function','function','id',':','Type','(','Params',')','{','Stmts','}'],[2,4,6,9])
 def functionfunc(token, params, rettype, stmts):
@@ -279,9 +290,9 @@ def stmtfunc3(exp, stmt):
 def stmtfunc4(exp, stmt):
     return WhileStmt(exp, stmt)
 
-@sm.syntaxmap(['Stmt','{','Stmts','}'],[2])
-def stmtfunc5(stmts):
-    return BlockStmt(stmts)
+@sm.syntaxmap(['Stmt','Block'],[2])
+def stmtfunc5(block):
+    return block
 
 @sm.syntaxmap(['Stmt','print','Exp',';'],[2])
 def stmtprint(exp):
@@ -436,18 +447,18 @@ parser = Parser(sm.productions, sm.terminal, sm.nonterminal,precs,precedence)
 
 # print(sm.terminal)
 t2p = {'id':'[a-zA-Z_]\w*','num':'\d+'}
-# lexer = Lexer('node/test2.dm',sm.terminal,t2p)
+lexer = Lexer('node/test3.dm',sm.terminal,t2p)
 # lexer = Lexer('test2.dm',sm.terminal,t2p)
 # print(list(lexer.lex()))
 # for t in lexer.lex():
 #     print(t)
 
-parser.generate()
-parser.dumpjson()
-# parser.loadjson()
-parser.htmlparse('test.html')
-# tokens = list(lexer.lex())
-# tree = parser.parse(tokens ,sm.sdmap)
+# parser.generate()
+# parser.dumpjson()
+parser.loadjson()
+# parser.htmlparse('test.html')
+tokens = list(lexer.lex())
+tree = parser.parse(tokens ,sm.sdmap)
 # typeCheck = TypeCheck(tree)
 # typeCheck.init()
 # typeCheck.accept()
@@ -456,5 +467,7 @@ parser.htmlparse('test.html')
 # Parser.printitems(sm.productions, printno=True)
 # cnt = Counter([p[0] for p in sm.productions])
 # print(cnt)
+past = AstPrintVisitor(tree)
+past.accept()
 print(calls)
 
