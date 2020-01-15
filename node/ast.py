@@ -9,7 +9,7 @@ import sys
 sys.path.append(path.join(path.dirname(__file__), '..'))
 from steps.lex import Lexer
 from analysis import calls
-from visitor import AstPrintVisitor
+from visitor import AstPrintVisitor, AstTraversalVisitor
 class SyntaxNode:
     def __str__(self):
         return self.kind
@@ -105,6 +105,14 @@ class BinaryOperator(Exp):
         self.kind = op
         self.left = left
         self.right = right
+        cmpops = ['GT','ST','GE','SE','NE','EQ']
+        if op in cmpops:# 对链式比较表达式进行改写 比如：1>2>3 => 1>2 and 2>3
+            if isinstance(left, BinaryOperator) and left.kind in cmpops:
+                self.kind = 'AND'
+                self.left = left
+                self.right = BinaryOperator(op,left.right,right)
+                # 比较操作符都是做结合，所有只计算了左边情况
+
 
 class ConstInt(Exp):
     def __init__(self, token):
@@ -173,10 +181,11 @@ class DeclType(SyntaxNode):
     pass
 
 class DeclRecord(DeclType):
-    def __init__(self, token, typenode):
+    def __init__(self, token, fields):
         self.kind = 'DeclRecord'
         self.name = token.text
-        self.typenode = typenode
+        self.token = token
+        self.fields = fields
 
 class TypeNode(SyntaxNode):
     pass
@@ -305,8 +314,8 @@ def stmtfunc6(typenode, token):
 
 @sm.syntaxmap(['Stmt','record','id','{','Fields','}'],[2,4])
 def stmtfunc7(token, fields):
-    typenode = RecordType(fields)
-    return DeclRecord(token, typenode)
+    # typenode = RecordType(fields)
+    return DeclRecord(token, fields)
 
 @sm.syntaxmap(['Fields','Fields',',','Field'],[1,3])
 def fieldsfunc1(fields,field):
@@ -326,10 +335,13 @@ def fieldfunc1(typenode, token):
     return RecordField(token, typenode)
 
 @sm.syntaxmap(['Type','int'],[1])
+@sm.syntaxmap(['Type','id'],[1])
 # @sm.syntaxmap(['Type','bool'],[1])
 def typefunc1(token):
     if token.kind == 'int':
         return IntType(token)
+    if token.kind == 'id':
+        return IdType(token)
     # if token.kind == 'bool':
     #     return BoolType(token)
 
@@ -468,6 +480,8 @@ tree = parser.parse(tokens ,sm.sdmap)
 # cnt = Counter([p[0] for p in sm.productions])
 # print(cnt)
 past = AstPrintVisitor(tree)
+gast  = AstTraversalVisitor(tree)
 past.accept()
+print(list(gast.accept()))
 print(calls)
 

@@ -361,19 +361,21 @@ class Parser:
     这个版本的分析器能接受语法动作
     '''
     @timer
-    def slrparse(self, actions, gotos, tokens, sdmap):
+    def slrparse(self, actions, gotos, tokens, sdmap, debug):
         pos = 0
         states = [0]
         symbol = []
         # tokens.append('$')
         sdmap = {self.productions.index(p):[params,f] for p,params,f in sdmap}
         while True:
-            print(states)
-            print(symbol)
+            if debug:
+                print(states)
+                print(symbol)
             if pos == len(tokens):
                 break
-            print(tokens[pos])
-            print('******************')
+            if debug:
+                print(tokens[pos])
+                print('******************')
             current = states[-1]
             token = tokens[pos]
             t = token.kind
@@ -529,7 +531,7 @@ class Parser:
         self.actions = {int(k):v for k,v in self.actions.items()}
         self.gotos = {int(k):v for k,v in self.gotos.items()}
 
-    def parse(self, tokens, sdmap):
-        return self.slrparse(self.actions, self.gotos, tokens, sdmap)
+    def parse(self, tokens, sdmap, debug=False):
+        return self.slrparse(self.actions, self.gotos, tokens, sdmap, debug)
 
 

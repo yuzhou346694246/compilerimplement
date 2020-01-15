@@ -33,16 +33,167 @@ class AstPrintVisitor(NodeVisitor):
         self.depthDec()
 
     def visitDeclVar(self, node):
-        print('{}:{}--{}'.format(self.getstar(),node.kind,node.name))
+        print('{}{}'.format(self.getstar(),node.kind))
+        self.depthInc()
+        print('{}{}'.format(self.getstar(),node.name))
+        self.visit(node.typenode)
+        self.depthDec()
     
     def visitDeclRecord(self, node):
-        print('{}:{}--{}'.format(self.getstar(),node.kind,node.name))
+        print('{}{}'.format(self.getstar(),node.kind,node.name))
+        self.depthInc()
+        print('{}name:{}'.format(self.getstar(),node.name))
+        print('{}fields'.format(self.getstar()))
+        self.depthInc()
+        for field in node.fields:
+            self.visit(field)
+        self.depthDec()
+        self.depthDec()
+    
+    def visitIntType(self, node):
+        print('{}{}'.format(self.getstar(),node.kind))
+    
+    def visitIdType(self, node):
+        print('{}{}:{}'.format(self.getstar(), node.kind,self.name))
+
+    def visitRecordField(self , node):
+        print('{}Field:{}'.format(self.getstar(),node.name))
+        self.depthInc()
+        self.visit(node.typenode)
+        self.depthDec()
     
     def visitAssignStmt(self, node):
-        print('{}:{}'.format(self.getstar(),node.kind))
+        print('{}{}'.format(self.getstar(),node.kind))
+        self.depthInc()
+        print('{}{}'.format(self.getstar(),node.name))
+        self.visit(node.right)
+        self.depthDec()
+
+    def visitConstInt(self,node):
+        print('{}{}'.format(self.getstar(),node.token.text))
 
     def getstar(self):
-        x = ''.join(['*' for i in range(self.depth)])
+        x = '|    '*self.depth + '|__'
+        return x
+
+    def depthInc(self):
+        self.depth = self.depth + 1
+    
+    def depthDec(self):
+        self.depth  = self.depth - 1
+
+
+class AstTraversalVisitor(NodeVisitor):
+    def __init__(self,root):
+        self.root = root
+        self.depth = 0
+    
+    def accept(self):
+        yield from self.visit(self.root)
+    
+    def visit(self,node):
+        method = 'visit' + node.kind
+        yield from getattr(self, method)(node)
+    
+    def visitProgram(self, node):
+        # yield from [node.kind,'{']
+        # yield node.kind
+        # yield '{'
+        # yield node.name,
+        # yield ':',
+        # yield 'Block',
+        # yield ':',
+        
+        # yield '}'
+        yield '{}:{}'.format(node.kind,node.name)
+        # self.depthInc()
+        yield '['
+        yield from self.visit(node.block)
+        yield ']'
+        # self.depthDec()
+    
+    def visitBlock(self, node):
+        # print('{}{}'.format(self.getstar(),node.kind))
+        yield node.kind
+        # self.depthInc()
+        yield '['
+        yield from self.visit(node.stmts)
+        yield ']'
+        # self.depthDec()
+
+    def visitStmts(self, node):
+        # print('{}{}'.format(self.getstar(),node.kind))
+        yield node.kind
+        # self.depthInc()
+        yield '['
+        for stmt in node.stmts:
+            yield from self.visit(stmt)
+        yield ']'
+        # self.depthDec()
+
+    def visitDeclVar(self, node):
+        # print('{}{}'.format(self.getstar(),node.kind))
+        yield node.kind
+        # self.depthInc()
+        yield '['
+        # print('{}{}'.format(self.getstar(),node.name))
+        yield node.name
+        yield from self.visit(node.typenode)
+        # self.depthDec()
+        yield ']'
+    
+    def visitDeclRecord(self, node):
+        # print('{}{}'.format(self.getstar(),node.kind,node.name))
+        yield node.kind
+        yield '['
+        # self.depthInc()
+        # print('{}name:{}'.format(self.getstar(),node.name))
+        yield node.name
+        yield 'fields'
+        # print('{}fields'.format(self.getstar()))
+        # self.depthInc()
+        yield '['
+        for field in node.fields:
+            yield from self.visit(field)
+        yield ']'
+        yield ']'
+        # self.depthDec()
+        # self.depthDec()
+    
+    def visitIntType(self, node):
+        # print('{}{}'.format(self.getstar(),node.kind))
+        yield node.kind
+    
+    def visitIdType(self, node):
+        # print('{}{}:{}'.format(self.getstar(), node.kind,self.name))
+        yield '{}:{}'.format(node.kind,self.name)
+
+    def visitRecordField(self , node):
+        # print('{}Field:{}'.format(self.getstar(),node.name))
+        yield 'Field:{}'.format(node.name)
+        # self.depthInc()
+        yield '['
+        yield from self.visit(node.typenode)
+        yield ']'
+        # self.depthDec()
+    
+    def visitAssignStmt(self, node):
+        # print('{}{}'.format(self.getstar(),node.kind))
+        yield node.kind
+        # self.depthInc()
+        # print('{}{}'.format(self.getstar(),node.name))
+        yield '['
+        yield node.name
+        yield from self.visit(node.right)
+        # self.depthDec()
+        yield ']'
+
+    def visitConstInt(self,node):
+        # print('{}{}'.format(self.getstar(),node.token.text))
+        yield node.token.text
+
+    def getstar(self):
+        x = '|    '*self.depth + '|__'
         return x
 
     def depthInc(self):
