@@ -9,9 +9,12 @@ class AstPrintVisitor(NodeVisitor):
     def accept(self):
         self.visit(self.root)
     
-    def visit(self,node):
-        method = 'visit' + node.kind
-        getattr(self, method)(node)
+    def visit(self, node):
+        if node.kind in ['Plus','Minus','Multiply','Divide','GT','ST','GE','SE','NE','EQ','OR','AND']:
+            self.visitPlus(node)
+        else:
+            method = 'visit' + node.kind
+            getattr(self, method)(node)
     
     def visitProgram(self, node):
         print('{}:{}'.format(node.kind,node.name))
@@ -81,7 +84,68 @@ class AstPrintVisitor(NodeVisitor):
     
     def depthDec(self):
         self.depth  = self.depth - 1
+    
+    def visitFunction(self, node):
+        print('{}{}:{}'.format(self.getstar(),node.kind, node.name))
+        self.depthInc()
+        self.visit(node.params)
+        self.visit(node.rettype)
+        # self.depthDec()
 
+        # self.depthInc()
+        # for stmt in node.stmts:
+        #     self.visit(stmt)
+        self.visit(node.stmts)
+        self.depthDec()
+    
+    def visitParams(self,node):
+        print('{}{}'.format(self.getstar(),node.kind))
+        self.depthInc()
+        for param in node.params:
+            self.visit(param)
+        self.depthDec()
+    
+    def visitParam(self, node):
+        print('{}{}'.format(self.getstar(),node.kind))
+        self.depthInc()
+        print('{}{}'.format(self.getstar(),node.name))
+        self.visit(node.typenode)
+        self.depthDec()
+    
+    def visitPlus(self, node):
+        print('{}{}'.format(self.getstar(),node.kind))
+        self.depthInc()
+        self.visit(node.left)
+        self.visit(node.right)
+        self.depthDec()
+
+    def visitIdExp(self, node):
+        print('{}{}:{}'.format(self.getstar(),node.kind,node.name))
+    
+    def visitCallExp(self, node):
+        print('{}Call:{}'.format(self.getstar(),node.name))
+        self.depthInc()
+        self.visit(node.aparams)
+        self.depthDec()
+    
+    def visitAParams(self, node):
+        print('{}{}'.format(self.getstar(),node.kind))
+        self.depthInc()
+        for aparam in node.aparams:
+            self.visit(aparam)
+        self.depthDec()
+    
+    def visitAParam(self, node):
+        print('{}{}'.format(self.getstar(),node.kind))
+        self.depthInc()
+        self.visit(node.exp)
+        self.depthDec()
+    
+    def visitInvokeFunction(self, node):
+        print('{}Invoke:{}'.format(self.getstar(),node.name))
+        self.depthInc()
+        self.visit(node.aparams)
+        self.depthDec()
 
 class AstTraversalVisitor(NodeVisitor):
     def __init__(self,root):
@@ -201,4 +265,5 @@ class AstTraversalVisitor(NodeVisitor):
     
     def depthDec(self):
         self.depth  = self.depth - 1
+    
     

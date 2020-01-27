@@ -130,7 +130,15 @@ class CallExp(Exp):
     def __init__(self, token, aparams):
         self.kind = 'CallExp'
         self.token = token
+        self.name = token.text
         self.aparams = aparams 
+
+class InvokeFunction(Stmt):
+    def __init__(self, token, aparams):
+        self.kind = 'InvokeFunction'
+        self.token = token
+        self.name = token.text
+        self.aparams = aparams
 
 class Params(SyntaxNode):
     def __init__(self, params,param):
@@ -156,7 +164,7 @@ class AParams(Exp):
         if aparams is None:
             self.aparams = []
         else:
-            self.aparams = self.aparams
+            self.aparams = aparams.aparams
         if aparam is not None:
             self.aparams.append(aparam)
 
@@ -247,7 +255,7 @@ def blockfunc(stmts):
     return Block(stmts)
     
 
-@sm.syntaxmap(['Function','function','id',':','Type','(','Params',')','{','Stmts','}'],[2,4,6,9])
+@sm.syntaxmap(['Function','function','id','(','Params',')',':','Type','{','Stmts','}'],[2,4,7,9])
 def functionfunc(token, params, rettype, stmts):
     return Function(token,params, rettype, stmts)
 
@@ -307,6 +315,15 @@ def stmtfunc5(block):
 def stmtprint(exp):
     return PrintStmt(exp)
 
+@sm.syntaxmap(['Stmt','Invoke'],[1])
+def stmtcall(invoke):
+    return invoke
+
+@sm.syntaxmap(['Invoke','id','(','AParams',')',';'],[1,3])# invoke 不需要返回值，callexp需要
+def invokefunc(token,aparams):
+    return InvokeFunction(token, aparams)
+
+
 @sm.syntaxmap(['Stmt','Type','id',';'],[1,2])
 def stmtfunc6(typenode, token):
     #idnode = SingleNode('id', token)
@@ -316,6 +333,7 @@ def stmtfunc6(typenode, token):
 def stmtfunc7(token, fields):
     # typenode = RecordType(fields)
     return DeclRecord(token, fields)
+
 
 @sm.syntaxmap(['Fields','Fields',',','Field'],[1,3])
 def fieldsfunc1(fields,field):
@@ -414,6 +432,9 @@ def expfunc2(token):
 def expcall(token, aparams):
     return CallExp(token, aparams)
 
+
+
+
 @sm.syntaxmap(['AParams','AParams',',','AParam'],[1,3])
 def aparamsfunc1(aparams, aparam):
     return AParams(aparams, aparam)
@@ -459,7 +480,8 @@ parser = Parser(sm.productions, sm.terminal, sm.nonterminal,precs,precedence)
 
 # print(sm.terminal)
 t2p = {'id':'[a-zA-Z_]\w*','num':'\d+'}
-lexer = Lexer('node/test3.dm',sm.terminal,t2p)
+# lexer = Lexer('node/test3.dm',sm.terminal,t2p)
+lexer = Lexer('node/test6.dm',sm.terminal,t2p)
 # lexer = Lexer('test2.dm',sm.terminal,t2p)
 # print(list(lexer.lex()))
 # for t in lexer.lex():
@@ -470,18 +492,19 @@ lexer = Lexer('node/test3.dm',sm.terminal,t2p)
 parser.loadjson()
 # parser.htmlparse('test.html')
 tokens = list(lexer.lex())
-tree = parser.parse(tokens ,sm.sdmap)
+tree = parser.parse(tokens ,sm.sdmap)#, debug=True)
 # typeCheck = TypeCheck(tree)
 # typeCheck.init()
 # typeCheck.accept()
 # inter = Interperter(tree)
 # inter.accept()
-# Parser.printitems(sm.productions, printno=True)
+# Parser.printitems(sm.productions)
 # cnt = Counter([p[0] for p in sm.productions])
 # print(cnt)
 past = AstPrintVisitor(tree)
-gast  = AstTraversalVisitor(tree)
+
 past.accept()
-print(list(gast.accept()))
+# gast  = AstTraversalVisitor(tree)
+# print(list(gast.accept()))
 print(calls)
 
